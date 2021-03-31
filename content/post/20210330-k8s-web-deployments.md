@@ -7,7 +7,7 @@ categories: ["software"]
 
 ### Situation
 
-Let’s say that you’re a full stack developer that works on an application that is deployed top to bottom on kubernetes. One day your team runs into an issue, your web deployment is stalled - while Deployment B was scaling up some pods stayed unhealthy! Nothing to fear though, your team knows that kubernetes wouldn’t forward traffic to a pod if it doesn’t pass a healthcheck. Healthy pods = healthy deployment right?
+Let’s say that you’re a full stack developer that works on an application which is deployed top to bottom on kubernetes. One day your web deployment stalls and your team peers in to investigate - while Deployment B was scaling up some of its pods were unhealthy! Nothing to fear though, your team knows that kubernetes wouldn’t forward traffic to a pod if it doesn’t pass a healthcheck. Healthy pods = healthy deployment right?
 
 It would seem that way until around 10 minutes later, when your product manager pops into chat frantically to say the site is down.
 
@@ -21,7 +21,9 @@ So you, the full stack developer hop on a call with the big guns - infrastructur
 **Figure 1. A graph of the outage showing that web requests dropped significantly**
 
 > "Huh...we were getting about x 404s per second during this outage weren't we..."
+
 ...
+
 > "Well I wonder what the errors were"
 
 And like that you jump to the logs.
@@ -33,9 +35,9 @@ And like that you jump to the logs.
 ...
 ```
 
-And in that moment you realized what had happened. For those who don’t know how modern web app deployments work, there’s generally a build step - where all the javascript gets compiled into a file (or set of files) with a unique name and is placed in some build directory. There’s an index.html file that is also built, which references those unique build files.
+And in that moment you realize what had happened. For those who don’t know how modern web app deployments work, there’s generally a build step - where all the javascript gets compiled into a file (or set of files) with a unique name and is placed in some build directory. There’s an index.html file that is also built, which references those unique build files.
 
-Because these build names will be unique between deployments (and therefore containers) a request for index.html to Deployment A - will trigger a request for a.minified.js by the browser. If that request gets routed to a Deployment B pod the load will fail, because B will only have b.minified.js. In this way, kubernetes safe rollout behavior became an ironically fatal quirk in your deployment.
+Because these build names will be unique between deployments (and therefore containers) a request for index.html to Deployment A - will trigger a request for a.minified.js by the browser. If that request gets routed to a pod in Deployment B the request will fail, because B will only have b.minified.js. In this way, kubernetes safe rollout behavior became an ironically fatal quirk in your deployment.
 
 ![The issue with two live deployments](/img/k8s-web-ascii.png)
 **Figure 2. Because is was no guarantee requests stick to pods by client, a user could request static assests from the wrong deployment**
