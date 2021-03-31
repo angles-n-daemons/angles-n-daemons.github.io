@@ -9,12 +9,13 @@ categories: ["cooking", "recipes"]
 **Figure 1. Christ I need to figure out how to fix the filter on this hugo theme**
 
 ```
+
 长岛简单牛肉面
 simple long island beef noodle soup
 (serves 9 people or 40 hungry cats)
 
 ingredients:
- - 10 quarts water
+ - 8 quarts water
  - 6 lbs beef bones
  - 2-3 lbs beef chuck
  - 6 tbsp sugar (optional)
@@ -30,8 +31,8 @@ ingredients:
 
 instructions:
 _broth & meat_
-1. Bring 10 quarts of water to a boil. Blanche and rinse the beef bones / chuck to remove any impurities. Discard the dirty water.
-2. Bring 10 more quarts of water and optionally the sugar to a boil. Add the beef bones and chuck in addition to two quartered tomatoes, one stalk of scallions, the garlic and ginger.
+1. Bring 8 quarts of water to a boil. Blanche and rinse the beef bones / chuck in batches to remove any impurities. Discard the dirty water.
+2. Bring 8 more quarts of water and optionally the sugar to a boil. Add the beef bones and chuck in addition to two quartered tomatoes, one stalk of scallions, the garlic and ginger.
 3. Boil on medium for 2 hours, then pull the bones and chuck out and prepare / set aside meat.
   3a. For the bones, try to pull the tendons and ligaments off in addition to any meat that's attached.
   3b. Cut the chuck into 1.5-2" wide cubes. They should be larger than bite sized, but movable with chop sticks.
@@ -49,7 +50,20 @@ _serving_
 8. Add ~3ish chunks of beef to the broth per serving. Don't be stingy - it's the easiest way to ruin a bowl of 牛肉面.
 9. Blanche the bok choy in the broth for ~1 minute. Pull out the beef chunks and bok choy into the serving bowls.
 10. Pour the broth into the bowls for serving. Sprinkle scallions on top and enjoy!
+
 ```
+  
+  
+# What is this recipe
+
+For those of you looking for a gourmet and authentic 牛肉面 this is probably not the web page you are looking for. I diverge a lot from the tradition in that I:
+ - .don't use much sodium aside from soy sauce
+ - .use bones in addition to meat for the soup
+ - .make the broth separate from the finished dish
+ - .have simplified the ingredients list so it's easier to find at a local mart
+ - .don't stir fry the ingredients before cooking
+
+I promise this recipe is good and tastes good, though I can't promise that it's authentic.
 
 # A Memory
 
@@ -65,7 +79,7 @@ These issues generally result in a broth that is:
  - .thinner than a piece of paper
  - .not chinese tasting, which does my head in
 
-The meat is almost always not tender enough (which is crazy to me, given how easy this is to do). This can often be found when you use an instapot to cook this dish, seriously cook anything but this dish in an instapot.
+The meat is almost always not tender enough (which is crazy to me, given how easy this is to do). This can often be found when you use an instapot to cook this dish, seriously cook anything but this dish in an instapot. Another criticism is that very often restaurants will skimp on the beef, which this recipe goes very far away from.
 
 These mistakes tend to leave the eater with a soup that isn't filling and honestly is sometimes difficult to get through. I find that even more modern recipes from asian authors (I love you woks of life, but please no instapot beef noodle soup recipes) make these common mistakes - which I hope to address with this recipe.
 
@@ -77,12 +91,3 @@ Some good general rules of thumb for beef noodle soups that I like are:
 
 Now that I've got that out of the way let's try to get on to the recipe.
 
-# What is this recipe
-
-For those of you looking for a gourmet and authentic 牛肉面 this is probably not the web page you are looking for. I diverge a lot from the tradition in that I:
- - .don't use much sodium aside from soy sauce
- - .use bones in addition to meat for the soup
- - .make the broth separate from the finished dish
- - .have simplified the ingredients list so it's easier to find at a local mart
-
-I promise this recipe is good and tastes good, though I can't promise that it's authentic.

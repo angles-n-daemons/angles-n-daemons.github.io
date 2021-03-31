@@ -41,7 +41,7 @@ preserveTaxonomyNames = true
     # Enables or disables the second flyby cursor. Default is false.
     loadonepass = false
 
-    custom_css = ["customstyle.css"]
+    customCss = ["customstyle.css"]
 
 [params.copyright]
     name = "Brian Dillmann"
