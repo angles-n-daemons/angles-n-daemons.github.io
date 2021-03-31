@@ -1,5 +1,5 @@
 baseURL = "https://example.com"
-title = "HUGO.386"
+title = "Home"
 languageCode = "en"
 DefaultContentLanguage = "en" # Change this to change the site's language
 theme = "hugo.386"
@@ -7,19 +7,23 @@ preserveTaxonomyNames = true
 
 [params]
     # The name to display as main title in the home page
-    mainpagetitle = "HUGO.386"
+    mainpagetitle = "the bud 🍺 light 💡 lime 🍋 blog"
 
     # The subtitle to display under the title in the home page
-    mainpagesubtitle = "Welcome to the early 90s!" 
+    mainpagesubtitle = "a friendly spattering of programming, cooking and philosophy"
 
     # The description of your website. It will be displayed in the home page
-    mainpagedesc = "This theme is the Hugo port of the BOOTSTRA.386 theme for a cool retro look on your blog. Check the links below to access the posts."
+    mainpagedesc = """
+        Hi, I'm brian and this is a place for my semi-structured thoughts to go when I want them to be saved. 
+        Since you made it here, I hope you're able to learn something - or at the very least get a nice chuckle from the content.
+        Enjoy!
+    """
 
     # The name to display in the copyright section in the footer
-    copyrightname = "JM Fergeau"
+    copyrightname = "Brian Dillmann"
 
     # The url to use as link in the copyright name in the footer. Leave empty to use none.
-    copyrighturl = "http://jmf-portfolio.netlify.com"
+    copyrighturl = ""
 
     # Show the "built on Hugo" disclaimer
     showhugo = true
@@ -38,16 +42,16 @@ preserveTaxonomyNames = true
     loadonepass = false
 
 [params.copyright]
-    name = "JM Fergeau"
+    name = "Brian Dillmann"
 
     # The url to use as link in the copyright name in the footer. Leave empty to use none.
     url = "http://jmf-portfolio.netlify.com"
 
     # Text to go before copyright information
-    prefix = "[hugo.386 theme by Max le Fou](https://gitlab.com/maxlefou/hugo.386)"
+    prefix = "[hugo.386 theme](https://gitlab.com/maxlefou/hugo.386)"
 
     # Text to go between copyright and hugo disclaimer (if enabled)
-    suffix = "Example site"
+    suffix = "brooklyn's noodle king"
 
 [menu]
   # This displays buttons in the navbar to access your contents
