@@ -11,7 +11,7 @@ In my working history I've seen some incidents that spark joy in the frightening
 
 ### Situation
 
-I saw a ping one day in our engineering channel that our web deploy was stuck. Quickly hopping in (and having come recently from a back end k8s shop) I quickly assured the group that although the stalled deploy (we can call **Deployment B**) had an unhealthy pod, our application would behave normally as kubernetes wouldn't forward traffic to a pod that didn't pass a healthcheck 🎉. **Deployment A** (the previous deployment) would continue to serve most of the traffic until the new deployment came up.
+I saw a ping one day in our engineering channel that our web deploy was stuck. Having come recently from a back end k8s shop, I quickly assured the group that although the stalled deploy had some unhealthy pods - kubernetes wouldn't forward traffic to a pod that didn't pass a healthcheck. In simpler terms - our deployment was healthy, and we didn't have anything to worry about because **Deployment A** (the previous deployment) would continue to serve most of the traffic until **Deployment B** (the new deployment) came up.
 
 Crisis averted right? It would seem that way until around 10 minutes later, when my manager popped in rather frantically to say the site was down.
 
@@ -41,9 +41,9 @@ And like that we jumped to the logs.
 ...
 ```
 
-And in that moment we had realized what had happened. For those who don't know how modern web app deployments work, there's generally a build step - where all the javascript gets compiled into a file (or set of files) with a unique name and is placed in some build directory. There's an index.html file that is also built, which references the unique javascript build files when they're loaded.
+And in that moment we had realized what had happened. For those who don't know how modern web app deployments work, there's generally a build step - where all the javascript gets compiled into a file (or set of files) with a unique name and is placed in some build directory. There's an index.html file that is also built, which references those unique build files.
 
-Because these build names will be unique between deployments (and therefore containers) a request for index.html to Deployment A - will trigger a request for a.minified.js by the browser. If that request gets routed to a Deployment B pod the load will fail, because B will only have b.minified.js. In this way, kubernetes safe rollout behavior became a fatal quirk in our deployment.
+Because these build names will be unique between deployments (and therefore containers) a request for index.html to Deployment A - will trigger a request for a.minified.js by the browser. If that request gets routed to a Deployment B pod the load will fail, because B will only have b.minified.js. In this way, kubernetes safe rollout behavior became an ironically fatal quirk in our deployment.
 
 ![The issue with two live deployments](/img/k8s-web-ascii.png)
 
@@ -51,4 +51,4 @@ Because these build names will be unique between deployments (and therefore cont
 
 ### What you should know
 
-Just because the stuck deployment caused an outage, doesn't mean that smooth deployments escape this behavior. On most deployments there is some period where the new deployment is scaling up and the old one is scaling down where you are likely to experience this issue. The longer the scale up period, the longer the outage window - so if you're thinking about deploying a web application to kubernetes think long and hard about the availability requirements and deployment frequency.
+Just because the stuck deployment caused an outage, it doesn't mean that smooth deployments escape this behavior. On most deployments there is some period where the new deployment is scaling up and the old one is scaling down where you are likely to experience this issue. The longer the scale up period, the longer the outage window - so if you're thinking about deploying a web application to kubernetes think long and hard about the availability requirements and deployment frequency.
