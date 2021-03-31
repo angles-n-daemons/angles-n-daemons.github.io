@@ -53,6 +53,9 @@ Because these build names will be unique between deployments (and therefore cont
 
 Just because the stuck deployment caused an outage, it doesn't mean that smooth deployments escape this behavior. On most deployments there is some period where the new deployment is scaling up and the old one is scaling down where you are likely to experience this issue. The longer the scale up period, the longer the outage window - so if you're thinking about deploying a web application to kubernetes think long and hard about the availability requirements and deployment frequency.
 
+
+### Epilogue
+
 Katrina, a seasoned and intelligent engineeer on my team suggested two paths for mitigation in the future that we will investigate:
 - .Rolling out via Blue/Green deployments so that we can have a 100% switch on.
 - .Somehow enabling sticky traffic to pods.
