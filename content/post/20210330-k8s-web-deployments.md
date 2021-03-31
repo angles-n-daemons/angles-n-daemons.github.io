@@ -41,7 +41,7 @@ Because these build names will be unique between deployments (and therefore cont
 
 ![The issue with two live deployments](/img/k8s-web-ascii.png)
 
-**Figure 2. Because is was no guarantee requests stick to pods by client, a user could request static assests from the wrong deployment**
+**Figure 2. Because is no guarantee requests stick to pods by client, a user could request static assests from the wrong deployment**
 
 ### What you should know
 
