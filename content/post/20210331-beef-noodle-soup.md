@@ -41,7 +41,7 @@ _broth & meat_
 
 _serving_
 1. Slice the remaining scallions super thin, so that they can be sprinkled on top of the dish.
-2. Slice the remaining tomatoes like a pizza (into 8 slices).
+2. Slice the remaining tomatoes like a pizza (into 8 slices each).
 3. Chop the bok choy stem, so that the leaves can move freely.
 4. Prepare the noodles and add them to the serving bowls.
 5. Also add half a tomato per serving to each bowl.
