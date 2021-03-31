@@ -84,12 +84,13 @@ These issues generally result in a broth that is:
 
 The meat is almost always not tender enough (which is crazy to me, given how easy this is to do). This can often be found when you use an instapot to cook this dish, seriously cook anything but this dish in an instapot. Another thing you'll see is people skimping on the beef, which is absolutely something you should avoid.
 
-These mistakes tend to leave the eater with a soup that isn't filling and honestly sometimes difficult to get through. I find that even more modern recipes from asian authors (I love you woks of life, but please no instapot beef noodle soup recipes) make these common mistakes - which I hope to address with this recipe.
+These mistakes tend to leave the eater with a soup that isn't filling and honestly sometimes difficult to get through. I find that even more modern recipes from asian authors make these common mistakes - which I hope to address with this recipe.
 
 Some good general rules of thumb for beef noodle soups that I like are:
 
  - .use bones in your broth and cook it for a long time. this is the best way to give your soup some body
  - .for the love of god use some chinese spices in your soup. if you're seasoning with paprika and ground black pepper it's probably not gonna taste very chinese.
  - .cook the meat for a long, long time and save the tendons / ligaments because they're part of the dish too!
+ - .do not use an instapot - the pressure puches the fat (flavor) out of your meat, which leaves for an unpleasant eating experience
 
 Now that I've got that out of the way let's try to get on to the recipe.
