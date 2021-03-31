@@ -40,6 +40,7 @@ And in that moment you realize what had happened. For those who don’t know how
 Because these build names will be unique between deployments (and therefore containers) a request for index.html to Deployment A - will trigger a request for a.minified.js by the browser. If that request gets routed to a pod in Deployment B the request will fail, because B will only have b.minified.js. In this way, kubernetes safe rollout behavior became an ironically fatal quirk in your deployment.
 
 ![The issue with two live deployments](/img/k8s-web-ascii.png)
+
 **Figure 2. Because is was no guarantee requests stick to pods by client, a user could request static assests from the wrong deployment**
 
 ### What you should know
