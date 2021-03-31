@@ -10,7 +10,7 @@ categories: ["cooking", "recipes"]
 
 ```
 
-长岛简单牛肉面
+长岛牛肉面
 simple long island beef noodle soup
 (serves 9 people or 40 hungry cats)
 
