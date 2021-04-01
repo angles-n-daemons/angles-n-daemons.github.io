@@ -18,7 +18,7 @@ It would seem that way until around 10 minutes later, when your product manager 
 So you, the full stack developer hop on a call with the big guns - infrastructure, platform, networking, etc. You share your theory that maybe a proxy sidecar was forwarding traffic to an unhealthy pod and you nearly get laughed out of the room. Then one of the platform engineers mentions a graph that she had been looking at and the room falls silent:
 
 ![Seeing an uptick in 404s](/img/k8s-web-graph.png)
-**Figure 1. A graph of the outage showing that web requests dropped significantly**
+**Figure 1. You might not alert on 404s, because users tend to hit them all the time**
 
 > "Huh...we were getting about x 404s per second during this outage weren't we..."
 
