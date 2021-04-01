@@ -1,4 +1,4 @@
-baseURL = "https://angles-n-daemons.github.io"
+baseURL = "https://abudlightlime.com"
 title = "Home"
 languageCode = "en"
 DefaultContentLanguage = "en" # Change this to change the site's language
@@ -47,7 +47,7 @@ preserveTaxonomyNames = true
     name = "Brian Dillmann"
 
     # The url to use as link in the copyright name in the footer. Leave empty to use none.
-    url = "http://jmf-portfolio.netlify.com"
+    url = ""
 
     # Text to go before copyright information
     prefix = "[hugo.386 theme](https://gitlab.com/maxlefou/hugo.386)"
