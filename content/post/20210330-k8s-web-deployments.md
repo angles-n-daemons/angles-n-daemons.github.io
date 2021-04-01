@@ -46,3 +46,14 @@ Because these build names will be unique between deployments (and therefore cont
 ### What you should know
 
 Just because the stuck deployment caused an outage, it doesn’t mean that smooth deployments evade this issue. On most deployments there is some period where the new deployment is scaling up and the old one is scaling down and anytime you have two live deployments you can face this problem. The longer the scale up period; the longer the outage window - so if you’re considering deploying a web application to kubernetes, think long and hard about the availability requirements and deployment frequency.
+
+### What can I do?
+
+Below are a couple of strategies for mitigating this issue. They're listed below in no particular order:
+
+ - .serve your web application behind a CDN
+ - .do blue green deployments to manage a 100% deployment cutover ([source](https://kubernetes.io/blog/2018/04/30/zero-downtime-deployment-kubernetes-jenkins/))
+ - .implement traffic stickiness using your ingress deployment affinity ([source](https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/))
+ - .??? you're the engineer, figure it out!
+
+_Note, most of the above ideas came from someone I work closely with. She's the brains, I'm just the court jester_
