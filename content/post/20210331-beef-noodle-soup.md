@@ -57,13 +57,14 @@ _serving_
 # What is this recipe
 
 For those of you looking for a gourmet and authentic 牛肉面 this is probably not the web page you are looking for. I diverge a lot from the tradition in that I:
+
  - .don't use much sodium aside from soy sauce
  - .use bones in addition to meat for the soup
  - .make the broth separate from the finished dish
  - .have simplified the ingredients list so it's easier to find at a local mart
  - .don't stir fry the ingredients before cooking
 
-I promise this recipe is good and tastes good, though I can't promise that it's authentic.
+I promise this recipe tastes good, though I can't promise that it's authentic.
 
 ![With spaghetti](/img/beef-noodle-soup.jpg)
 **Figure 2. Mmmmmmmmmm**
@@ -86,11 +87,9 @@ The meat is almost always not tender enough (which is crazy to me, given how eas
 
 These mistakes tend to leave the eater with a soup that isn't filling and honestly sometimes difficult to get through. I find that even more modern recipes from asian authors make these common mistakes - which I hope to address with this recipe.
 
-Some good general rules of thumb for beef noodle soups that I like are:
+Some general rules of thumb for good beef noodle soups that I like are:
 
  - .use bones in your broth and cook it for a long time. this is the best way to give your soup some body
  - .for the love of god use some chinese spices in your soup. if you're seasoning with paprika and ground black pepper it's probably not gonna taste very chinese.
  - .cook the meat for a long, long time and save the tendons / ligaments because they're part of the dish too!
  - .do not use an instapot - the pressure puches the fat (flavor) out of your meat, which leaves for an unpleasant eating experience
-
-Now that I've got that out of the way let's try to get on to the recipe.
