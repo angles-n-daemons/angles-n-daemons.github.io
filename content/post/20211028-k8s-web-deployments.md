@@ -1,6 +1,6 @@
 ---
 title: "Kubernetes Web Deployments, a love story"
-date: 2021-03-30T21:37:13-04:00
+date: 2021-10-28T21:37:13-04:00
 tags: ["kubernetes", "incident"]
 categories: ["software"]
 ---
