@@ -31,16 +31,22 @@
 </div>
 </div>
 </nav><div id=content class=container>
-<article class="row-fluid navmargin">
-<header class=page-header>
-<h1>soup</h1>
-</header>
-</article>
-<ul>
-<li>
-<a href=/post/20211015-beef-noodle-soup/>2021-10-15 | 牛肉麵, Wai Po's Beef Noodle Soup</a>
-</li>
-</ul>
+<div class="row-fluid navmargin">
+<div class=page-header>
+<h1>Diagnosing MySQL deadlocks - Fri, Nov 26, 2021</h1>
+</div>
+<p class=lead></p>
+<h1 id=an-unpleasant-exception>An unpleasant exception</h1>
+<pre tabindex=0><code>Deadlock found when trying to get lock; try restarting transaction
+</code></pre><p>If you&rsquo;re reading this document, you&rsquo;re either here out of curiosity or necessity. I&rsquo;ll be brief for those in the latter camp. When you encounter the above error in production, you only need the stack trace to figure out which query got blocked. What I have found is difficult to ascertain is which query is doing the actual blocking.</p>
+<p>A precursory search for mysql deadlock errors will show that entering the command <code>show engine innodb status</code> &ldquo;gives you information about the last known deadlock&rdquo;. What you probably haven&rsquo;t been told is that unless you&rsquo;ve scanned the output of this command before you are in for a bit of heavy reading.</p>
+<p>To find the offending transaction blocking the above, search the output for the section containing the phrase <code>HOLDS THE LOCK(S):</code>, and the offending query should be right above it. Example output below:</p>
+<pre tabindex=0><code>MySQL thread id 2, OS thread handle 140555289204480, query id 22 172.17.0.1 root updating           
+DELETE FROM t WHERE i = 1                                                                           
+*** (2) HOLDS THE LOCK(S): 
+</code></pre>
+<h4><a href=https://abudlightlime.com>Back to Home</a></h4>
+</div>
 </div><footer class=container>
 <hr class=soften>
 <p>
