@@ -5,27 +5,27 @@ tags: ["chinese", "noodles"]
 categories: ["cooking", "recipes"]
 ---
 
-// TODO: Add picture
-**Figure 1. <caption>**
+![Zha Jiang Mian, le delicious](/img/zha-jiang-mian.jpg)
+**Figure 1. A classic and tasy Chinese noodle dish**
 
 ```
 炸醬麵
 Ma's Zha Jiang Mian
-(Serves X)
+(Serves 6)
 
 ingredients:
  - sauce
-   - tbsp vegetable oil
-   - scallion (rough into 2 inch segments)
-   - cloves garlic (cut in half)
-   - ginger
-   - lbs ground pork (or turkey)
-   - tbsp dou ban jiang (bean paste)
-   - tbsp tian mian jiang (sweet bean paste)
-   - tomato (diced)
-   - greenbeans (diced)
-   - dry tofu (diced)
-   - cups water
+   - 2 tbsp vegetable oil
+   - 1 scallion (finely diced)
+   - 3 garlic cloves (finely minced)
+   - 1/2 in cube ginger (finely minced)
+   - 1lb ground pork (or turkey)
+   - 2 heaping tbsp dou ban jiang (bean paste)
+   - 2 heaping tbsp tian mian jiang (sweet bean paste)
+   - 1/2 tomato (diced)
+   - 1 cup greenbeans (diced)
+   - 2 cup dry tofu (diced)
+   - 2 cups water
 
  - serving
    - flour noodles (cooked)
@@ -45,17 +45,3 @@ _serving_
 1. Ensure the sauce is still hot from cooking - feel free to microwave if it's gone cold.
 2. Add some noodles to a bowl. Add 3 tablespoons (or more) of sauce on top of the noodles, and then the scallions, cucumbers and egg. Mix vigerously to incorperate the sauce and enjoy!
 ```
-
-
-// TODO: Add picture
-**Figure 2. <caption>**
-
-# 
-
-My mother was born and raised in a small cottage on an oil refinery in Kaohsiung, TW. If you went there today, it wouldn't look too dissimilar from a sugar refinery that you'd see in the UK, or an old estate in Long Island. The brick buildings seem strangely out of place given the backdrop that is Taiwan and when I visited it felt eerily like walking into a dream.
-
-My mother and her brothers would always talk about wai po's (grandma) cooking. From the spice dishes of Hunan, to being smoked out by fumagated peppers, to the various cusines of China they often had fond and wholesome memories centered around food.
-
-I only learned this recipe this year and having learned it feel a little bit closer to my family, and maybe a little bit closer to Taiwan.
-
-Beef noodle soup is a dish that's loved by many Taiwanese people, and people generally have a bond over the shared tradition of making it for their families.
