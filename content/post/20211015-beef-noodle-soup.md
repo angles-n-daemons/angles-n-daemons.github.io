@@ -65,10 +65,10 @@ _serving_
 
 # A Memory
 
-My mother was born and raised in a small cottage on an oil refinery in Kaohsiung, TW. If you went there today, it wouldn't look too dissimilar from a sugar refinery that you'd see in the UK, or an old estate in Long Island. The brick buildings seem strangely out of place given the backdrop that is Taiwan and when I visited it felt eerily like walking into a dream.
+My mother was raised in a small cottage on an oil refinery in Kaohsiung, TW. Looking at it today, the oil refinery doesn't look too different from a sugar factory in the UK, or an old estate in Long Island. That stunning brick complex sprinkled into that mountainous Asian backdrop always seemed so out of place, yet so appropriate; visiting always felt eerily like walking into a dream.
 
 My mother and her brothers would always talk about wai po's (grandma) cooking. From the spice dishes of Hunan, to being smoked out by fumagated peppers, to the various cusines of China they often had fond and wholesome memories centered around food.
 
-I only learned this recipe this year and having learned it feel a little bit closer to my family, and maybe a little bit closer to Taiwan.
+I only learned this recipe this year and having learned it I feel a little bit closer to my family, and maybe a little bit closer to Taiwan.
 
-Beef noodle soup is a dish that's loved by many Taiwanese people, and people generally have a bond over the shared tradition of making it for their families.
+Beef noodle soup is a dish that's loved by many Taiwanese people, so I hope cooking it helps to preserve the feeling that one has when they visit that tiny island.
