@@ -1,6 +1,6 @@
 ---
 title: "Uncertain Project Estimation"
-date: 2021-10-28T21:37:13-04:00
+date: 2021-01-06T21:37:13-04:00
 tags: ["project management", "management"]
 categories: ["management"]
 ---

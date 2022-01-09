@@ -1,6 +1,6 @@
 ---
 title: "Your first rotation oncall as a Software Engineer"
-date: 2021-10-28T21:37:13-04:00
+date: 2021-12-24T21:37:13-04:00
 tags: ["oncall", "pagerduty", "datadog", "prometheus"]
 categories: ["software", "oncall"]
 ---
