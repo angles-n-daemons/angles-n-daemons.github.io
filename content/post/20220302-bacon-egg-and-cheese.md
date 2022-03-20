@@ -6,7 +6,7 @@ categories: ["cooking", "recipes"]
 ---
 
 ![A full long island breakfast](/img/bec-final.jpg)
-**Figure 1. You may have heard of the full english or full irish, well this is the full long island.**
+**Figure 1. You may have heard of the full english or full irish, well this one I call the full long island.**
 
 # Out on the island
 
@@ -17,7 +17,7 @@ Most days growing up I'd get a bacon egg and cheese with ketchup from the Bayvil
 ![The Bayville deli](/img/bec-bayville-deli.png)
 **Figure 2. The bayville deli, it's been remodeled since I've grown up but it keeps the same charm it always had.**
 
-To me it was the perfect breakfast, it wasn't aggressively sweet like a hearty set of pancakes or unsatisfying like a sad bowl of oatmeal. It was and still is one of the pillars of what defines my food experience.
+To me it was the perfect breakfast, it wasn't overly sweet like a hearty set of pancakes or unsatisfying like a sad bowl of oatmeal. It was and still is one of the pillars of what defines my food experience.
 
 # Getting out of town
 
@@ -41,17 +41,28 @@ So you wanna make it at home? It ain't gonna be as good, but we can get close.
 
 # The Bun
 
+![A soft kaiser roll, fresh from Whole Foods](/img/bec-roll-cheese.jpg)
+**Figure 3. A soft roll and cheese gets my weekday rolling.**
+
 Okay so here's where I might ruffle a couple of feathers, but a bacon egg and cheese belongs on a kaiser roll and nowhere else. Not on a bagel, not on a hero, not on a brioche bun or challah bread, on a kaiser roll. It's a personal preference, so do what you like - I'm just stating an opinion here folks.
 
 # The Bacon
+
+![Bacon](/img/bec-bacon.jpg)
+**Figure 4. Bacon, the meme food of the 2010s**
 
 The bacon you can cook however you like also. I like to bake it because it's easy to do and makes the bacon crispy, but there's no set rules. Most delis will cook the bacon in bulk and keep it in a mountain on the grill like a pile of hot gold - but you're probably not cooking at that volume so choose how you like to do it.
 
 # The Egg
 
+![Scrambled Eggs](/img/bec-egg.jpg)
+**Figure 5. Scrambling eggs on a hot pan.**
 
+The eggs generally come in two forms, fried and scrambled. There's merits to both, usually they're cooked on a hot skillet though and done within about a minute.
 
 # The Cheese
+
+American and cheddar are generally the way to go, feel free to choose.
 
 ```
 Bacon Egg and Cheese
