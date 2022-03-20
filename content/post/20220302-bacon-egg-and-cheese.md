@@ -5,18 +5,23 @@ tags: ["breakfast", "new york", "sandwich"]
 categories: ["cooking", "recipes"]
 ---
 
+![A full long island breakfast](/img/bec-final.jpg)
+**Figure 1. You may have heard of the full english or full irish, well this is the full long island.**
+
 # Out on the island
 
 If you're from around here, you know that we're not in Long Island, we're on Long Island. That train you take home isn't the "lurr" like some city folk call it, it's the "ell-eye-arr-arr" and you know for sure that any deli you walk into is going to make a fucking good bacon egg and cheese sandwich.
 
-Most days growing up I'd get a bacon egg and cheese with ketchup from the Bayville Deli on Bayville Ave on my way to school. I'd wash it down with one of those tiny tropicana juice boxes, because they came free with the sandwich. Back then they asked "Salt, Pepper or Ketchup" assuming you only wanted one or a couple instead of the "sallpeppacachup" you'll hear now in the city, and as far as I know a bagel came with a schmear, not eggs and bacon but I only really know the circle that I grew up in.
+Most days growing up I'd get a bacon egg and cheese with ketchup from the Bayville Deli on Bayville Ave on my way to school. I'd wash it down with one of those tiny tropicana juice boxes, because they came free with the sandwich. Back then they asked "Salt, Pepper or Ketchup" assuming you only wanted one or a couple instead of the "sallpeppacachup" you'll hear now in the city, and as far as I knew a bagel came with a schmear, not eggs, bacon and cheddar.
+
+![The Bayville deli](/img/bec-bayville-deli.png)
+**Figure 2. The bayville deli, it's been remodeled since I've grown up but it keeps the same charm it always had.**
 
 To me it was the perfect breakfast, it wasn't aggressively sweet like a hearty set of pancakes or unsatisfying like a sad bowl of oatmeal. It was and still is one of the pillars of what defines my food experience.
 
-
 # Getting out of town
 
-I didn't start to miss the bacon egg and cheese until I went to college. People in Massachusetts are generally smart, capable, and hardworking folk who I admire greatly. That being said, fuck can they not cook breakfast. I can't tell you how many "Deli"s I've been in where they put the eggs in the FUCKING MICROWAVE ARE YOU KIDDING ME!?? Four years at UMass taught me that having the [number one campus dining](https://umassdining.com/accolades) doesn't mean shit if your entire state can't cook a two dollar fucking breakfast sandwich.
+I didn't start to miss the bacon egg and cheese until I went to college. People in Massachusetts are generally smart, capable, and hardworking folk who I admire greatly. That being said, fuck can they not cook breakfast. I can't tell you how many "Deli"s I've been in where they put the eggs in the FUCKING MICROWAVE ARE YOU KIDDING ME!?? Four years at UMass taught me that having the [number one campus dining](https://umassdining.com/accolades) doesn't mean shit if your entire state can't cook a two dollar breakfast sandwich.
 
 So I'd make my own, I'd ask for an omelette with just cheese - take their chewed up bacon from the line and toss it on a toasted roll most days, washing it down with the concentrate orange juice that I really didn't care for. It wouldn't be long before I was back home.
 
