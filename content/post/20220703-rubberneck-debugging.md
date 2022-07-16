@@ -1,6 +1,6 @@
 ---
 title: "Wanna get better? Spend less time rubbernecking."
-date: 2022-06-03T16:26:50-04:00
+date: 2022-07-03T16:26:50-04:00
 tags: ["software development"]
 categories: ["software"]
 ---
