@@ -56,7 +56,7 @@ An alternative story for increased search usage could be told using the same res
 Both stories are plausible, but the latter is more inline with my experience of Google lately.
 
 #### A Math-ier Description
-Let’s say that each person in a given month experiences has `z` life experiences, of which `ρ` percent generate `m` unique questions that a person thinks could be answered by Google. Using Google, the person performs an average of `k` searches for each question. Given these numbers, I assume m * K (number of questions, number of searches per question) generates n searches per month. These numbers could be 100.000 life experiences, 0.25% leading to using Google, which would be 250 questions a user googles, and 1.8 searches per question which would culminate in 450 total Google searches in a given month.
+Let’s say that each person in a given month experiences has `z` life experiences, of which `ρ` percent generate `m` unique questions that a person thinks could be answered by Google. Using Google, the person performs an average of `k` searches for each question. Given these numbers, I assume `m * K` (number of questions, number of searches per question) generates `n` searches per month. These numbers could be 100.000 life experiences, 0.25% leading to using Google, which would be 250 questions a user googles, and 1.8 searches per question which would culminate in 450 total Google searches in a given month.
 
 ```
 Variable Legend
@@ -65,6 +65,9 @@ z: number of life experiences a person has in a month
 m: number of questions that a person has for Google in a month
 k: number of searches that a person performs for each question
 n: number of Google searches a person performs in a month
+
+m = z * ρ
+n = m * k
 ```
 
 Using the proposition that Ads make Google better, it’s likely that the `ρ` modifier grows slightly - in that more experiences in the person’s life prompt them to use Google given their good experience with the product. This raises the `m` value, and therefore the `n` number of questions that a user might ask Google in a given month.
