@@ -11,12 +11,31 @@ categories: ["business"]
 #### h4
 ##### h5
 ###### h6
+
+
 *italic*
+
+
+This might be **bold inline**
+
 **bold*
+
+
 _underscore_
+
+
 __underscoredouble__
+
+
 > this is a short quote
+
+
 `this is code`
+
+
+This might be `code inline`
+
+
 ```
 This is a longer bit of code
 ```
