@@ -86,7 +86,7 @@ I remember the days where Google's experience didn’t feel as difficult or forc
 #### Due Credit:
 A buddy of mine named Kyle recommended this podcast to me after listening to it. A lot of the ideas I’m sharing were his, or were inspired by his perspective on this episode.
 
-Links
+#### Links
 * [Freakonomics Podcast about Google](https://freakonomics.com/podcast/is-google-getting-worse/)
 * [Google Paper on Search Engines](http://infolab.stanford.edu/~backrub/google.html) (see section titled "Advertising and Mixed Motives")
 * [Article 1: Referencing Podcast and Study](https://www.dailymail.co.uk/sciencetech/article-11441689/Former-Google-engineer-blames-internets-failures-search-overall-decline.html)
