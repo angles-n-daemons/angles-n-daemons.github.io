@@ -35,7 +35,7 @@ Over time though, I’ve personally felt that the experience of Google has worse
 
 I learned that the concern about the effect that advertising revenue has on search goes all the way back to the founding of Google [in a paper written by its founders](http://infolab.stanford.edu/~backrub/google.html) (see section titled "Advertising and Mixed Motives"). In it, there’s a commonly reference quote which is:
 
-“we expect that advertising funded search engines will be inherently biased towards the advertisers and away from the needs of the consumers”
+> “we expect that advertising funded search engines will be inherently biased towards the advertisers and away from the needs of the consumers”
 
 The common belief and reasoning behind this performance degradation is gradual due to  the incentives of advertisers, Google’s primary revenue source.
 
