@@ -16,6 +16,9 @@ I believe that Mayer was drawing the conclusion that including ads in search gen
 Without additional evidence, I suspect that ads led to worse results, and required users to repeat searches - which could also reflect an increase in usage in the product. This alternative perspective is representative of my experience over time - as I find that nowadays I often have to tune my search terms so that I reach the results I’m looking for, and that the ones delivered by Google are getting worse over time unless I very explicitly tune my queries.
 
 ![Google related content took up 1.5+ viewports in this search](/img/google-search-results.png)
+**Google related content took up 1.5+ viewports in this search**
+
+
 
 ## Google, is it worse now? [long form]
 
@@ -25,6 +28,8 @@ Sometime in the autumn of 2022, I was listening to a [Freakanomics episode](http
 I actually remember one of the first, if not first time I used Google. It was at Vernon Middle School in Oyster Bay, NY and someone had mentioned it as a better alternative to the existing search engines that people used. At the time, I had transitioned from Yahoo to AskJeeves - and I was pretty content with both of them until I began using Google. At the onset, I loved the simplicity and straightforwardness of Google - the page was minimal, search worked fast and delivered great results. It quickly became my search engine of choice - and over time, my entrypoint to the web.
 
 ![Google as I first remembered it](/img/google-homepage-2000.png)
+**Google as I first remembered it**
+
 
 Over time though, I’ve personally felt that the experience of Google has worsened slowly but noticeably. The minimalism that initially drew me to the product was being rapidly diminished with inlined Google products. Lately it’s felt like Google has been getting more and more difficult to use. This topic has already been covered in length, so I won’t go too deeply into it - but [I found an article which does a decent job describing why this is](https://www.washingtonpost.com/technology/2020/10/19/google-search-results-monopoly/). What I wanted to discuss was the claim made in Freakonomics that ads make a better experience for Google.
 
