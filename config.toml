@@ -1,102 +1,27 @@
 baseURL = "https://abudlightlime.com"
 title = "Home"
 languageCode = "en"
-DefaultContentLanguage = "en" # Change this to change the site's language
+DefaultContentLanguage = "en"
 theme = "black-and-light"
 preserveTaxonomyNames = true
 
+pygmentsstyle       = "bw"
+pygmentscodefences  = true
+
 [params]
-    # The name to display as main title in the home page
-    mainpagetitle = "the bud 🍺 light 💡 lime 🍋 blog"
+  sitename = "The Bud Light Lime Blog"
+  disableWebFonts = false
 
-    # The subtitle to display under the title in the home page
-    mainpagesubtitle = "a friendly spattering of programming, cooking and philosophy"
+# [[menu.main]]
+#     name = "About"
+#     url  = "https://github.com/davidhampgonsalves/hugo-black-and-light-theme"
+[[menu.main]]
+    name = "Posts"
+    url  = "/posts"
+[[menu.main]]
+    name = "Resume"
+    url  = ""
+[[menu.main]]
+    name = "About"
+    url  = "/about"
 
-    # The description of your website. It will be displayed in the home page
-    mainpagedesc = """
-        Hi, I'm brian and this is a place for my semi-structured thoughts to go when I want them to be saved. 
-        Since you made it here, I hope you're able to learn something - or at the very least get a nice chuckle from the content.
-        Enjoy!
-    """
-
-    # The name to display in the copyright section in the footer
-    copyrightname = "Brian Dillmann"
-
-    # The url to use as link in the copyright name in the footer. Leave empty to use none.
-    copyrighturl = ""
-
-    # Show the "built on Hugo" disclaimer
-    showhugo = true
-
-    # Urls for social networks
-    linkedin = "https://www.linkedin.com/in/brian-dillmann-0a997979/"
-    github = "https://github.com/angles-n-daemons"
-
-    # Enables or disables the loading animations. false activates them. Default is false.
-    loadfastload = false
-
-    # Sets the speed for the page loading effect. Default is 1.0.
-    loadspeedfactor = 1.0
-
-    # Enables or disables the second flyby cursor. Default is false.
-    loadonepass = false
-
-    customCss = ["customstyle.css"]
-
-[params.copyright]
-    name = "Brian Dillmann"
-
-    # The url to use as link in the copyright name in the footer. Leave empty to use none.
-    url = ""
-
-    # Text to go before copyright information
-    prefix = "[hugo.386 theme](https://gitlab.com/maxlefou/hugo.386)"
-
-    # Text to go between copyright and hugo disclaimer (if enabled)
-    suffix = "brooklyn's noodle king"
-
-[menu]
-  # This displays buttons in the navbar to access your contents
-  [[menu.main]]
-    identifier = "about" # An unique identifier for the button
-    name = "About"       # A display name for the button
-    url = "/about/"      # The path to the content. It can lead to a single page (like here)
-    weight = 10          # A number to order the buttons in the navbar
-
-  [[menu.main]]
-    identifier = "posts"
-    name = "All posts"
-    url = "/post/"       # The path can lead to a content folder too.
-    weight = 20
-
-[taxonomies]
-category = "categories"
-tag = "tags"
-
-
-[privacy]
-
-  [privacy.vimeo]
-    disabled = false
-    simple = true
-
-  [privacy.twitter]
-    disabled = false
-    enableDNT = true
-    simple = true
-
-  [privacy.instagram]
-    disabled = false
-    simple = true
-
-  [privacy.youtube]
-    disabled = false
-    privacyEnhanced = true
-
-[services]
-
-  [services.instagram]
-    disableInlineCSS = true
-
-  [services.twitter]
-    disableInlineCSS = true
