@@ -12,16 +12,12 @@ pygmentscodefences  = true
   sitename = "The Bud Light Lime Blog"
   disableWebFonts = false
 
-# [[menu.main]]
-#     name = "About"
-#     url  = "https://github.com/davidhampgonsalves/hugo-black-and-light-theme"
 [[menu.main]]
-    name = "Posts"
-    url  = "/posts"
+    name = "CV"
+    url  = "https://docs.google.com/document/d/1L_NP2sQIvnh4hndU-JbhczP-uAUPY5ie1_vsmrOdz_A"
 [[menu.main]]
-    name = "Resume"
-    url  = ""
+    name = "Github"
+    url  = "https://github.com/angles-n-daemons"
 [[menu.main]]
-    name = "About"
-    url  = "/about"
-
+    name = "LinkedIn"
+    url  = "https://www.linkedin.com/in/brian-dillmann-0a997979/"
