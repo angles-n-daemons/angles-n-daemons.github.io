@@ -5,12 +5,6 @@ tags: ["google", "advertising", "experimentation"]
 categories: ["business"]
 ---
 
-Changelog:
- - 2023-01-18: edited for readability
- - 2022-12-04: published
-
-**Note:** This article is presented in short form and long form in that order. Feel free to read whichever version you prefer.
-
 ## Google, is it worse now? [short form]
 
 In a recent Freakanomics episode about the perceived quality degradation of Google Search, Marissa Mayer makes a claim that ads made Google a more enjoyable product to Google users. This claim came as the conclusion of a long running experiment in which some users were shown ads, and those users ended up using Google 3% more.
@@ -90,3 +84,8 @@ A buddy of mine named Kyle recommended this podcast to me after listening to it.
 * [Article 1: Referencing Podcast and Study](https://www.dailymail.co.uk/sciencetech/article-11441689/Former-Google-engineer-blames-internets-failures-search-overall-decline.html)
 * [Article 2: Referencing Podcast and Study](https://searchengineland.com/is-google-search-getting-worse-389658)
 * [Washington Post Article on Google Experience as a Monopoly](https://www.washingtonpost.com/technology/2020/10/19/google-search-results-monopoly/)
+
+Changelog:
+ - 2023-01-18: edited for readability
+ - 2022-12-04: published
+
