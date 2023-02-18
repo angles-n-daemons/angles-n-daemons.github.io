@@ -1,5 +1,5 @@
 ---
-title: "A curious claim about Advertising's effect on Google"
+title: "A curious claim about advertising's effect on Google"
 date: 2022-12-04T17:07:42-04:00
 tags: ["google", "advertising", "experimentation"]
 categories: ["business"]
