@@ -1,5 +1,5 @@
 ---
-title: "RBAC x ReBAC, a hybrid authorization model for large technology companies"
+title: "RBAC x ReBAC, a hybrid authorization model for big technology companies"
 date: 2023-05-16T15:12:30-04:00
 tags: ["security", "authorization"]
 categories: ["security", "software"]
@@ -7,7 +7,7 @@ categories: ["security", "software"]
 
 ## When one access-control model isn't enough
 
-Access controls are an important aspect of ensuring security within complex businesses. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provided a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC, but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
+Access controls are an important part of ensuring safety within business applications. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provided a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC, but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
 
 This document is broken down into the following sections:
  * Use Case Primer
@@ -68,8 +68,7 @@ Customer Service Service
 
 Database
 
-
-## A quick refresher of the access models
+## A refresher on the access control schemes
 
 ### Role Based Access Control (RBAC)
 
@@ -93,9 +92,9 @@ Here are some proposed definitions for Roles and Permissions that would support 
 
 [Image on mapping]
 
-In this access model, if Jen has the permission to refund Carol, then she can also refund Jim and Wendy. If Justin can deactivate Lindsay's account, then certainly he could deactivate Nick and Nancy's as well. Herein lies the difficulty in a RBAC access scheme, you're able to define what actions employees are able to take, but not which accounts they are able to take them on.
+In this access model, if Jen has the permission to refund Carol, then she can also refund Jim and Wendy. If Justin can deactivate Lindsay's account, then can also deactivate Nick and Nancy's as well. Herein lies the difficulty in a RBAC access scheme, you're able to define what actions employees are able to take, but not which accounts they are able to take them on. This is generally more access than the employees need - as they rarely need to affect changes across a broad collection of accounts
 
-Below we'll talk about ReBAC, which addresses this problem - but comes with its own scaling challenges.
+Below we'll talk about ReBAC, which addresses this problem - but comes with its own unique challenges.
 
 ### Relationship Based Access Control (ReBAC)
 
@@ -117,11 +116,11 @@ This model is the simplest and easiest to manage. It is also the approach with t
 
 For establishing relationships, it should be fairly easy to automate access. When a Customer Service Agent begins a call with a customer, they can be assigned the READ / WRITE relationships with the account that they are servicing.
 
-When a Fraud Agent begins an investigation, they can be granted similar relationships for the accounts they're investigating.
+If a Fraud Agent begins an investigation, they can be granted similar relationships for the accounts they're investigating.
 
-There's an immediate issue in this approach in that since Account is the only resource and the relationships are so simple, Auto Insurance Agents will be able to take action on the Home Insurance policies of customers that they are assisting.
+There issue with this approach is that since Account is the only resource and the relationships are so simple, access granted to an account is absolute. For example if I'm granted access to see a person's address, it's technically the same permission required to view their social security number.
 
-This can quickly get out of hand as the functionality to take more sensitive actions like credit accounts, view PII, or wipe data becomes the responsibility of the Operations department. We need some way to limit access to certain actions between groups in Operations.
+This can quickly get out of hand as the actions that operations needs to take become more sensitive like creditint accounts, viewing PII, or wiping account data. We need some way to limit access to certain actions between groups in Operations.
 
 2. Various pieces of the Account as Resources; Read, Write and Admin as the Relationships between Employees and these Resources.
 
@@ -134,7 +133,12 @@ This can quickly get out of hand as the functionality to take more sensitive act
  * `WRITE`
  * `OWNER`
 
-This approach is better from an access restriction perspective than both RBAC and the above ReBAC model, but introduces some engineering challenges. Specifically, at what points are these relationships granted? If a Customer Service call starts, what relationships should the system configure? If transferred between teams, do we add new relationships and remove some old?
+This approach is better from an access restriction perspective than both RBAC and the above ReBAC model, but introduces some engineering challenges. Specifically, at what points are these relationships granted? If a Customer Service call starts, how are the correct relationships configured? If transferred between teams, do we add new relationships and remove some old?
+
+Configuring relationships becomes difficult, either it's:
+
+ * Automated, and of great difficulty to the engineering team as the business changes
+ * Manual, and requires supervisors to be constantly granting and removing access between accounts.
 
 This approach breaks down as the business internally becomes more complex. The layering of both RBAC and ReBAC is meant to address these issues.
 
@@ -151,28 +155,39 @@ This approach breaks down as the business internally becomes more complex. The l
  * `WRITE_HOME_POLICY`
  * `ADMIN_HOME_POLICY`
 
-This approach is better from an access restriction perspective than both RBAC and the above ReBAC model, but introduces some engineering challenges. Specifically, at what points are these relationships granted? If a service call begins for an Auto Policy, what system configures the relationship between the account
-
-## A practical example
+This approach suffers from the same challenges as the last, as configuring the relationships becomes the primary challenge in managing access to resources.
 
 ## Using the good bits of each
 
-After a good bit of exploration, one approach that seems reasonable is layering both approaches carefully.
+After a good bit of exploration, the approach that I've found the easiest to implement has been merging RBAC with the first ReBAC implementation. This comes with the following benefits:
 
-Let's start with a practical example. We operate an insurance business who's primary 
+ * Access is limited to only accounts that the employee has a relationship with.
+ * Relationship configuration is simple, and therefore can be automated.
+ * Which actions the user is able to take is determined by role, and managed by the RBAC portion of our scheme.
+ * The approach is clear and easy to configure.
 
-We want to establish two internal user groups, one for managing auto insurance policies, and one for managing home insurance policies.
+## Implementation
 
-## Creating the framework teams will use
+### Access Gates
 
-```
+The simplest part of this exercise is to define what an Access Gate will do an how it will look in code. Our access gates are little bits of code that run before any action is taken. They generally will live as middleware in RPC / HTTP handlers, and will ensure that users have the correct permissions before the action is executed.
+
+Each Access Gate takes a small bit of configuration:
+ * A permission requirement
+ * A relationship requirement
+
+In order to pass the gate, the user will first need both the permissions specified as well as the relationship to the account in question.
+
+[Disclaimer? can these be null?]
+
+```kotlin
 class AccessGate (
-    val permission: Permission,
-    val relationship: Relationship,
+    val permission: Permission?,
+    val relationship: Relationship?,
 ) {
     fun assert(caller: Identity, account: Account) {
         val hasPermission = callerHasPermission(permission)
-        val hasRelationship = callerHasRelationship(caller, account, relationship)
+        val hasRelationship = !notNull(permission) && callerHasRelationship(caller, account, relationship)
 
         if (hasPermission && hasRelationship) {
             return
@@ -181,6 +196,26 @@ class AccessGate (
         throw(AuthorizationError(
             "missing {permission} or relationship {relationship} with {account}",
         ))
+    }
+}
+```
+
+## Configuring relationships
+
+The other part of the system that needs to be fleshed out is the one which configures the relationships.
+
+
+```kotlin
+class CustomerSupportAssignment {
+    ...
+
+    fun assignSupportRepToCustomer(accountId: Number, repId: Number) {
+        configureRelationship(accountId, repId, Relationships.WRITE)
+    }
+    ...
+
+    fun closeSupportCase(case: Case) {
+        removeRelationship(case.accountId, case.repId, Relationships.WRITE)
     }
 }
 ```
@@ -201,7 +236,7 @@ rpc AutoPolicy:
         relationship: "ACCOUNT_WRITE"
 ```
 
-## Creating narrow overrides for exceptions
+## Creating overrides
 
 ```
 class AccessGate (
