@@ -7,7 +7,7 @@ categories: ["security", "software"]
 
 ## When one access-control model isn't enough
 
-Access controls are an important part of ensuring safety within business applications. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provided a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC, but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
+Your application's access-control scheme is an important part of ensuring safety within your business. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provides a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC [citation needed], but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
 
 This document is broken down into the following sections:
  * Use Case Primer
@@ -168,6 +168,8 @@ After a good bit of exploration, the approach that I've found the easiest to imp
 
 ## Implementation
 
+The implementation of this access control model is going to be simple enough, consisting of Access Gates and Relationship Checkpoints.
+
 ### Access Gates
 
 The simplest part of this exercise is to define what an Access Gate will do an how it will look in code. Our access gates are little bits of code that run before any action is taken. They generally will live as middleware in RPC / HTTP handlers, and will ensure that users have the correct permissions before the action is executed.
@@ -180,7 +182,7 @@ In order to pass the gate, the user will first need both the permissions specifi
 
 [Disclaimer? can these be null?]
 
-```kotlin
+```
 class AccessGate (
     val permission: Permission?,
     val relationship: Relationship?,
@@ -200,12 +202,15 @@ class AccessGate (
 }
 ```
 
-## Configuring relationships
+## Relationship Checkpoints
 
-The other part of the system that needs to be fleshed out is the one which configures the relationships.
+The other part of the system that requires definition is the one in which Relationships are added and removed between Accounts and Employees. You see this in products like Facebook where Users establish these relationships (ie: one person "friends" another) or like Google Docs where each resource has an owner and the owner manually configures the relationships.
 
+For internal products, it's often easier to setup checkpoints where relationships start and end using existing points in your system. For example, when a Customer Service Agent is connected with an end user, that block ends up being a good point to establish a relationship between the Agent and the User's Account - so that the Agent can gain access to the functionality they'll need to assist the User.
 
-```kotlin
+Likewise, when the support call ends - it's easy enough to remove that relationship so that the Agent is no longer able to access that User's account. Since the only Resource in the system is an Account, automating these relationships stays easy over the lifetime of the system.
+
+```
 class CustomerSupportAssignment {
     ...
 
@@ -220,10 +225,7 @@ class CustomerSupportAssignment {
 }
 ```
 
-test test
 
-
-test test
 
 ```
 rpc AutoPolicy:
@@ -260,6 +262,10 @@ class AccessGate (
 }
 ```
 
+## Extensions and Drawbacks
+
+### Gate configuration
+
 ```
 rpc AutoPolicy:
     - LoadAutoPolicy:
@@ -272,3 +278,21 @@ rpc AutoPolicy:
         relationship: "ACCOUNT_WRITE"
 ++      override: "AUTO_POLICY_ADMIN"
 ```
+
+### Drawbacks
+
+Some drawbacks on this layered approach include:
+
+`Complexity`
+
+The first notable drawback of using this approach is that it is more complex than RBAC or a very simple ReBAC model on its own.
+
+`Restrictiveness`
+
+There are certain cases where Employees will need broader access to many accounts and if this becomes the norm rather than the exception within your Operations department you might be better served with a different authorization scheme.
+
+[Note, meditate on this a little further]
+
+### Final Comments
+
+I'll close by saying that I've used this scheme in a business setting with a good degree of success. Using our company's existing Registrar (from which we could configure RBAC controls), we were able to add it to our internal case review system. It worked well for the end users, and got a solid affirmation from the Security team. I'd encourage anyone thinking of a better way to secure their systems to explore whether it could work for your teams.
