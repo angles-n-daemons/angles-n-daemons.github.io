@@ -202,6 +202,25 @@ class AccessGate (
 }
 ```
 
+[TODO, describe usage]
+Once your access gate abstraction is ready to be used, you can start using it in your handlers.
+
+```
+class AccountService {
+    @GET("/api/account/address")
+    @AccessGate(Permissions.Address.READ, Relationship.Account.READ)
+    fun getAddress(req: GetAddressRequest): GetAddressResponse {
+        // Logic to get address
+    }
+
+    @PUT("/api/account/address")
+    @AccessGate(Permissions.Address.WRITE, Relationship.Account.WRITE)
+    fun updateAddress(req: UpdateAddressRequest): UpdateAddressResponse {
+        // Logic to update the address
+    }
+}
+```
+
 ## Relationship Checkpoints
 
 The other part of the system that requires definition is the one in which Relationships are added and removed between Accounts and Employees. You see this in products like Facebook where Users establish these relationships (ie: one person "friends" another) or like Google Docs where each resource has an owner and the owner manually configures the relationships.
