@@ -7,7 +7,7 @@ categories: ["security", "software"]
 
 ## When one access-control model isn't enough
 
-Your application's access-control scheme is an important part of ensuring safety within your business. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provides a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC [citation needed], but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
+An application's access-control scheme is an important part of ensuring safety within your business. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provides a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC [citation needed], but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
 
 This document is broken down into the following sections:
  * Use Case Primer
