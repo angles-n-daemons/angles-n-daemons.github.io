@@ -5,6 +5,8 @@ tags: ["security", "authorization"]
 categories: ["security", "software"]
 ---
 
+*Note* This article is an abandoned draft.
+
 ## When one access-control model isn't enough
 
 An application's access-control scheme is an important part of ensuring safety within your business. Most companies I've worked with have employed an RBAC model to secure their internal applications, which has provides a good-enough set of restrictions and controls for employees. This model breaks down as the business gets more complex, as does ReBAC - a popular alternative to RBAC. The wikipedia page for ReBAC describes how it can be layered in conjunction with RBAC [citation needed], but the literature online is sparse on exactly how to go about doing so. In this article, I aim to describe an implementation for doing so using a concrete business use case.
@@ -43,30 +45,39 @@ The operations department consists of two departments, Fraud and Customer Servic
 
 The engineering department consists of a Product, a Fraud Tools and a Customer Service Tools team. The product team will be the the user facing application which isn't relevant to the system we're describing, because they aren't used by internal employees. The Fraud and Customer Service Tools will be the systems which we'll be using to leverage our authorization scheme.
 
-Image (company hierarchy)
-
-Company
-  - Engineering
-    - App
-    - Fraud Tooling
-    - Customer Service
-  - Operations
-    - Fraud
-    - Customer Service
-      - Home
-      - Life
-
-System Architecture
-
-App
-
-App Service
-
-Fraud Tools Service
-
-Customer Service Service
-
-Database
+```
+                                ┌────────────────┐
+                                │                │
+                                │  Quinnsurance  │
+                                │                │
+                                └───────┬────────┘
+                                        │
+                                        │
+                                        │
+                       ┌────────────┐   │   ┌─────────────┐      ┌────────────────┐
+                       │            │   │   │             │      │                │
+      ┌───┬────┬───────┤Engineering ◄───┴───► Operations  ├──────►─Fraud          │
+  ┌───▼───┤    │       │            │       │             │      │ Investigations │
+  │       │    │       └──────┬─────┘       └─────┬───────┘      │                │
+  │ App   │    │              │                   │              └────────────────┘
+  │       │    │              │                   │
+  └───────┘    │              │                   │
+               │              │                   │
+        ┌──────▼────┐  ┌──────▼────┐        ┌─────▼───────┐
+        │           │  │           │        │             │
+        │ Fraud     │  │ Customer  │        │ Customer    ├────────────┐
+        │ Tools     │  │ Service   │        │ Service     │            │
+        │           │  │ Tools     │        │             │            │
+        └───────────┘  │           │        └────┬────────┘       ┌────▼────┐
+                       └───────────┘             │                │         │
+                                                 │                │ Home    │
+                                            ┌────▼────┐           │         │
+                                            │         │           └─────────┘
+                                            │ Life    │
+                                            │         │
+                                            └─────────┘
+```
+Figure 1. A depiction of the company hierarchy
 
 ## A refresher on the access control schemes
 
