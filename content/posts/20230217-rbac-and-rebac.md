@@ -5,7 +5,7 @@ tags: ["security", "authorization"]
 categories: ["security", "software"]
 ---
 
-*Note* This article is an abandoned draft.
+*Note:* This article is an abandoned draft. I still feel some of the ideas and concepts are helpful, so I've left it here in case the thought experiment benefits anyone.
 
 ## When one access-control model isn't enough
 
