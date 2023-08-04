@@ -69,7 +69,7 @@ See the below description on minimum addressible units and sectors wrt reading a
 
 With this in mind, a simple enough pager would look like the following:
 
-```
+```python
 class Pager:
     def __init__(
         self,
@@ -101,12 +101,13 @@ As we continue to expand our implementation, there will also be a caching layer 
 
 ### Reading the Node
 
-Now we get to the fun part, seeing if we're at all on the right track by parsing the bytes into types that our system recognizes.
-
 
 # Reading the test table node
 
 <visualization of byte format for nodes>
+
+``````
+
 
 # Reading varints
 
