@@ -1,5 +1,5 @@
 ---
-title: "popSQL part 1: learning through reverse-engineering"
+title: "popSQL part 1: a DB education through reverse-engineering"
 date: 2023-08-03T11:41:42-04:00
 tags: ["sql", "python", "sqlite"]
 categories: ["software"]
@@ -7,34 +7,23 @@ categories: ["software"]
 
 # A liking to database systems
 
-Databases have long been a close interest of mine. Since taking CS 445 Information Systems at UMass, I've held a special interest in how databases were used and how they worked under the hood. I found things like relational algebra fascinating, and I always enjoyed how clean the surface of the SQL specification felt. I leafed through Michael Stonebraker's [Red Book](https://redbook.io) and developed a decent understanding about how to design, interact with and debug production databases.
+Databases have long been a close interest of mine. Since taking CS 445 Information Systems at UMass, I've held a special interest in how databases were used and how they worked under the hood. I found things like relational algebra fascinating, and I always enjoyed how clean the SQL specification felt. I leafed through Michael Stonebraker's [Red Book](https://redbook.io) and developed a decent understanding about how to design, interact with and debug production databases.
 
-For a long while that interest was merely a surface level relationship, but at a certain point I wanted to dive below that surface - to really understand how SQL statments turned into data, and how the data systems I was using operated so efficiently. Unfortunately, the resources for building databases from scratch is relatively sparse.
+For a long while this interest was merely a surface level curiosity, but at a certain point I wanted to dive below that surface - to really understand how SQL statments turned into data, and how the data systems I was using operated so efficiently. The resources on creating databases from scratch were slim (and still seem to be). Books, courses and academia make it easy to interact with existing databases, but not to design one on your own.
 
-Lots of educational resources on building databases focus on using a database system and building within it (a challenging thing to google around)
+They all seem to miss the sweet spot of being approachable, practical, and sufficiently true to the principles of production systems that one can better appreciate and understand what's happening under the hood. I treat [Crafting Interpreters](https://craftinginterpreters.com/contents.html) my personal gold standard for what I look for in technical literature, and in databases there wasn't anything equivalent. Luckily, I happened upon the [SQLite documentation](https://www.sqlite.org/arch.html) - which in some ways had what I was looking for.
 
-Missing the sweet spot - practical, approachable, true to the ideas
+I decided to try to replicate the behavior of SQLite using the documentation, but ran headfirst into a roadblock. It seemed that while the documentation was thorough and quite easy to follow - it glossed over some of the details as to how SQLite actually worked under the hood. Questions like "how does the virtual machine interact with the b-tree?" and "how is a scan performed at a programmatic level?" can only be answered by reading the source code. For the benefit of the end users, and the detriment of a curious subscriber like myself the SQLite source is anything but simple to follow. It's tens of thousands of lines of code which has been tuned for optimization rather than readability. Take for example parsing variable length integers (varints), something described in the documentation with one paragraph. The [source code](https://github.com/sqlite/sqlite/blob/master/src/util.c#L1183) is nearly 300 lines of C code, with loops unrolled, bitmasks applied, variables stripped down so they represent nothing other than the address space which they occupy. If you compare this to the [15 lines of python code](https://github.com/angles-n-daemons/popsql/blob/master/pypopsql/util.py#L17) it takes to do this clearly and comprehsibly - you come to the same conclusion I did, that SQLite was designed to be a production system, and not an educational resource.
 
-How I use crafting interpreters as the gold standard for technical resources
+Being discouraged, I abandoned this journey in favor of simpler, lower hanging endeavours. Three years later however, my interest was once again piqued, and SQLite despite my above caveats still remained one of the closest things to an educational resource that I could look for.
 
-- Crafting interpreters for creating programming languages
-- Build your own database (published now)
+With all this in mind, I'm trying once again to replicate a good bit of SQLite functionality in python by taking it slower, and really digging into the source code bit by bit. My goals in this endeavor are to create a good-enough sqlite replication which covers some of the core functionality employed by SQLite.
 
-Talk about the SQLite documentation, talk about how I figured how easy it would be.
-
-I spend a few months starting a go implementation of the SQLite internals and abandoned it, as just reading the documentation didn't iron out some of the more challenging questions. I also wanted to simplify my implementation but I realized that as soon as I diverged from the SQLite implementation that I would be in the dark as to how to design my solutions.
-
-A few years later and I'm here, trying to start again using the sqlite documentation but this time starting from the data format. I'm going to try to match the sqlite specification the best I can, which will be difficult because SQLite is a monster (quote LOC). It also requires reading the source code which can be quite challenging as it's been designed in a way where comprehensibility has been sacrificed for performance (give example of parsing varints using sqlite link and my link). Give example on lemon parser generator, how many loc it is
-
-What are my goals:
- - To provide a sql interface which is compatible with the sqlite file format
- - To make the codebase comprehensive to someone trying to read it
-
-It should be noted that as this is an educational exercise, performance is an afterthought. You'll note this as my code runs lots of transformations to and from byte arrays, which SQLite ignores in the name of speed.
+It should be noted that as this is an educational exercise, performance is an afterthought. You'll note this as my code runs lots of transformations to and from byte arrays, which SQLite ignores in the name of speed. I still haven't come to a conclusion as to how much of the source implementation I intend to replicate, whether I'll replicate the lemon parser generator, if I plan to replicate the bytecode engine. I figure I'll take it week by week and try to get the testable bits working and see where things go from there.
 
 # Getting started
 
-My approach this time will be to start from the absolute bottom of the database, the file format. I chose this as a starting place because it's testable and well documented. From there I'll design a close-enough-to the source set of abstractions which are unit tested fairly comprehsively.
+My approach this time will be to start from the absolute bottom of the system, the file format. I chose this as a starting place because it's easy to test in addition to being well documented. From there I'll design a close-enough-to the source set of abstractions which are unit tested fairly comprehsively.
 
 ```
 $ sqlite test.db
