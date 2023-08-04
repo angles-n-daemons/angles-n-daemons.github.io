@@ -5,7 +5,7 @@ tags: ["sql", "python", "sqlite"]
 categories: ["software"]
 ---
 
-# A liking to database systems
+# A liking for database systems
 
 Databases have long been a close interest of mine. Since taking CS 445 Information Systems at UMass, I've held a special interest in how databases were used and how they worked under the hood. I found things like relational algebra fascinating, and I always enjoyed how clean working with SQL felt. I leafed through Michael Stonebraker's [Red Book](https://redbook.io) and developed a decent understanding about how to design, interact with and debug production databases.
 
@@ -28,7 +28,7 @@ My approach this time will be to start from the absolute bottom of the system, t
 In approaching the build out this time, I figured the easiest thing to test against the functionality with SQLite was the file format, mainly because it would be simple to read and compare what SQLite actually writes. It's simple enough to create a database with a single table and then see what the file looks like on a byte, by byte level.
 
 ```
-$ sqlite test.db
+$ sqlite3 test.db
 > CREATE TABLE test(col1 VARCHAR(2), col2 INTEGER);
 > INSERT INTO test(col1, col2) VALUES ('hi', 1), ('yo', 2);
 ```
@@ -42,8 +42,8 @@ Once the database has been created you can also see how large it is. One questio
 
 It seems like the answer is yes. Creating a single user table with 2 rows yields an 8k file, which consulting the [file format](https://www.sqlite.org/fileformat2.html) leads me to believe that the page contents are as follows:
 
-Page 1. Header (.dbinfo) and Schema Table Leaf Node
-Page 2. Table Leaf Node for the test table which I just created.
+ * Page 1. Header (.dbinfo) and Schema Table Leaf Node
+ * Page 2. Table Leaf Node for the test table which I just created.
 
 I assume that the first page is going to be more complicated to parse than the second page, and a lot of the process for parsing the second page can be reused for the first page.
 
@@ -70,6 +70,7 @@ See the below description on minimum addressible units and sectors wrt reading a
 With this in mind, a simple enough pager would look like the following:
 
 ```python
+# pager.py
 class Pager:
     def __init__(
         self,
@@ -100,6 +101,110 @@ Something interesting to note is that page numbers are 1-indexed in the sqlite i
 As we continue to expand our implementation, there will also be a caching layer at the level of the Pager which will cache these blocks of data in memory for increased performance.
 
 ### Reading the Node
+
+SQLite like many other relational databases stores it's data in b-trees, a balanced tree which is designed to work best on disk. The simple reason for this is that each Node has a lot of children, because each node fits in a single page read. If a page is 4096 bytes, that means there can be a lot of child pointers in that page.
+
+Now that we have an abstraction for reading data to and from a database file, we'll be able to parse out some of the properties of the individual btree nodes. We'll start with the node header, which is the first 8 or 12 bytes of the page - depending on whether the page is an internal or leaf node.
+
+The header is laid out bytewise like this:
+
+```
+[ a, b, b, c, c, d, d, e, (f, f, f, f)]
+
+a -> one byte node type identifier
+b -> two byte integer pointer representing the first freeblock
+c -> two byte integer pointer identifying the start of the cell content
+d -> one byte count of fragmented free bytes within the cell content area
+f -> right pointer for this node (only included in internal nodes)
+```
+
+Using this information, we can write a utility function for turning bytes into an integer and then write the code that reads the node header.
+
+```python
+# util.py
+def b2i(b: bytes):
+    return int.from_bytes(b, 'big', signed=False)
+```
+
+And the node parser:
+
+```python
+# node.py
+from enum import Enum
+from typing import Tuple
+
+from util import b2i
+
+class NodeType(Enum):
+    INDEX_INTERIOR = 2
+    TABLE_INTERIOR = 5
+    INDEX_LEAF = 10
+    TABLE_LEAF = 13
+
+class Node:
+    def __init__(
+        self,
+        data: bytes,
+    ):
+        self.data = data
+        self.page_size = len(data)
+        
+        self.node_type, \
+        self.cell_offset, \
+        self.num_cells, \
+        self.right_pointer, \
+        self.first_freeblock, \
+        self.num_fragmented_bytes = self.read_header_bytes(data)
+
+
+    def read_header_bytes(
+        self,
+        data: bytes,
+    ) -> Tuple[
+        NodeType,
+        int, # num cells
+        int, # cell_offset
+        int, # right_pointer
+        int, # first_freeblock
+        int, # num_fragmented_bytes
+    ]:
+        offset = 0
+
+        node_type = NodeType(b2i(data[offset + 0: offset + 1]))
+
+        first_freeblock = b2i(data[offset + 1: offset + 3])
+
+        num_cells = b2i(data[offset + 3: offset + 5])
+
+        cell_offset = b2i(data[offset + 5: offset + 7])
+
+        num_fragmented_bytes = data[offset + 7]
+
+        right_pointer = None
+        if not self.is_leaf(node_type):
+            right_pointer_bytes = data[offset + 8: offset + 12]
+            right_pointer = b2i(right_pointer_bytes)
+
+        return (
+            node_type,
+            cell_offset,
+            num_cells,
+            right_pointer,
+            first_freeblock,
+            num_fragmented_bytes,
+        )
+
+    def is_leaf(self, node_type: NodeType = None):
+        node_type = node_type or self.node_type
+        return node_type in (NodeType.TABLE_LEAF, NodeType.INDEX_LEAF)
+
+    def _debug_print_header(self):
+        print('node type', self.node_type)
+        print('first freeblock', self.first_freeblock)
+        print('cell content start', self.cell_offset)
+        print('num fragmented bytes', self.num_fragmented_bytes)
+        print('right pointer', self.right_pointer)
+```
 
 
 # Reading the test table node
