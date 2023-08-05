@@ -129,8 +129,8 @@ f -> right pointer for this node (only included in internal nodes)
 Using this information, we can write a utility function for turning bytes into an integer and then write the code that reads the node header.
 
 ```python
-# util.py
-def b2i(b: bytes):
+# src/util.py
+def b2i(b: bytes) -> int:
     return int.from_bytes(b, 'big', signed=False)
 ```
 
@@ -202,7 +202,7 @@ class Node:
             num_fragmented_bytes,
         )
 
-    def is_leaf(self, node_type: NodeType = None):
+    def is_leaf(self, node_type: NodeType = None) -> bool:
         node_type = node_type or self.node_type
         return node_type in (NodeType.TABLE_LEAF, NodeType.INDEX_LEAF)
 
@@ -240,11 +240,97 @@ right pointer None
 
 We should be able to read the row data now that we have the header being read appropriately.
 
-# Reading the test table node
+# Reading the rows
 
-<visualization of byte format for nodes>
+In the btree literature, each record is referred to as a btree "cell". Each btree node has a list of cell pointers immediately following the header, of which each points to some cell content. The cell content grows leftward from the end of the page, which means that the center of the page is occupied by empty space. The cell pointers are ordered, and the cell content isn't necessarily in the same order as the pointers. The layout of the page generally looks as follows:
 
-``````
+```
+[h, cp1, cp2, cp3..., 0, 0, 0, 0, 0, ...cc3, cc2, cc1]
+
+h -> header section
+cpi -> cell pointer i, two byte pointer which points to the offset in the page where cell i's content lies
+cci -> cell content i, variable sized payload for the actual information housed by cell i
+```
+
+Let's get started by reading the cell pointers and then follow up later by reading the full cell content. We can create a minimal TableLeafCell implementation:
+
+```python
+# src/backend/cell.py
+
+class TableLeafCell:
+    def __init__(
+        self,
+        data: bytes,
+        pointer: int,
+    ):
+        self.pointer = pointer
+        cursor = pointer
+
+        self.payload_data = data[cursor:cursor+self.payload_size]
+```
+
+And then read the cells from our Node implementation. To do this we add two functions `read_cells` and `_debug_print_cells` to read and see our cell values, and add reading and storing the cells to the Node constructor. For this step we'll only read the cell pointers to see that we're getting the right values.
+
+
+```python
+
+```
+
+Now that we're ready to read the cell content, we need to add a utility to parse varint values. Varints are a variable length integer format described in the sqlite documentation. The varints in the simplest terms are integers that have a length of 1-9 bytes where the first bit of each byte describes whether the integer has terminated, and the last 7 bits are the integer payload. This excepts the 9th byte if included which is always filled with 8 bits of payload information as the integer cannot carry on past the 9th byte.
+
+We add it here to the `util.py` file:
+
+```python
+# src/util.py
+from typing import Tuple
+
+def b2i(b: bytes) -> int:
+    ...
+
+def varint(b: bytes, cursor: int) -> Tuple[int, int]:
+    """
+    varint reads a variable length int from a byte string
+
+    it takes the following parameters
+     - b: sequence of bytes, generally a full table page
+     - cursor: starting index of the varint
+
+    and returns a tuple containing
+    - the value of the integer
+    - index of the cursor after the last byte of the varint
+    """
+
+    result = 0
+
+    for j in range(8):
+        i = cursor + j
+
+        # read the next byte into an integer
+        byte_num = b[i]
+
+        # result shifts left 7 bits, then the first 7 bits of byte_num are appended
+        result = (result << 7) | (byte_num & 0x7f)
+
+        # check the first bit of byte_num to see if we should continue reading
+        continue_reading = byte_num & 0x80
+
+        if not continue_reading:
+            return result, cursor + j + 1
+
+    # read last byte, use all 8 bytes to fill the remaining spaces
+    byte_num = b[cursor + 8]
+    result = (result << 8) | byte_num
+
+    return result, cursor + 9
+```
+
+Now that we can read varints, we can add the code for reading cell values as described in the documentation. We can create a cell class:
+
+<visualization for cell data format>
+
+
+
+
 
 
 # Reading varints
