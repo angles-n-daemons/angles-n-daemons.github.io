@@ -1,29 +1,32 @@
 ---
-title: "popSQL part 1: a DB education through reverse-engineering"
-date: 2023-08-03T11:41:42-04:00
+title: "popSQL part 1: reading the sqlite database file"
+date: 2023-08-05T10:26:00-04:00
 tags: ["sql", "python", "sqlite"]
 categories: ["software"]
 ---
 
-# A liking for database systems
-
-Databases have long been a close interest of mine. Since taking CS 445 Information Systems at UMass, I've held a special interest in how databases were used and how they worked under the hood. I found things like relational algebra fascinating, and I always enjoyed how clean working with SQL felt. I leafed through Michael Stonebraker's [Red Book](https://redbook.io) and developed a decent understanding about how to design, interact with and debug production databases.
-
-For a long while this interest was merely a surface level curiosity, but at a certain point I wanted to dive below that surface - to really understand how SQL statments turned into data, and how the data systems I was using operated so efficiently. The resources on creating databases from scratch were slim (and still seem to be). Books, courses and academia make it easy to interact with existing databases, but not to design one on your own.
-
-They all seem to miss the sweet spot of being approachable, practical, and sufficiently true to the principles of production systems that one can better appreciate and understand what's happening under the hood. I treat [Crafting Interpreters](https://craftinginterpreters.com/contents.html) my personal gold standard for what I look for in technical literature, and in databases there wasn't anything equivalent. Luckily, I happened upon the [SQLite documentation](https://www.sqlite.org/arch.html) - which in some ways had what I was looking for.
-
-I decided to try to replicate the behavior of SQLite using the documentation, but ran headfirst into a roadblock. It seemed that while the documentation was thorough and quite easy to follow - it glossed over some of the details as to how SQLite actually worked under the hood. Questions like "how does the virtual machine interact with the b-tree?" and "how is a scan performed at a programmatic level?" can only be answered by reading the source code. For the benefit of the end users, and the detriment of a curious subscriber like myself the SQLite source is anything but simple to follow. It's tens of thousands of lines of code which has been tuned for optimization rather than readability. Take for example parsing variable length integers (varints), something described in the documentation with one paragraph. The [source code](https://github.com/sqlite/sqlite/blob/master/src/util.c#L1183) is nearly 300 lines of C code, with loops unrolled, bitmasks applied, variables stripped down so they represent nothing other than the address space which they occupy. If you compare this to the [15 lines of python code](https://github.com/angles-n-daemons/popsql/blob/master/pypopsql/util.py#L17) it takes to do this clearly and comprehsibly - you come to the same conclusion I did, that SQLite was designed to be a production system, and not an educational resource.
-
-Being discouraged, I abandoned this journey in favor of simpler, lower hanging endeavours. Three years later however, my interest was once again piqued, and SQLite despite my above caveats still remained one of the closest things to an educational resource that I could look for.
-
-With all this in mind, I'm trying once again to replicate a good bit of SQLite functionality in python by taking it slower, and really digging into the source code bit by bit. My goals in this endeavor are to create a good-enough sqlite replication which covers some of the core functionality employed by SQLite.
-
-It should be noted that as this is an educational exercise, performance is an afterthought. You'll note this as my code runs lots of transformations to and from byte arrays, which SQLite ignores in the name of speed. I still haven't come to a conclusion as to how much of the source implementation I intend to replicate, whether I'll replicate the lemon parser generator, if I plan to replicate the bytecode engine. I figure I'll take it week by week and try to get the testable bits working and see where things go from there.
-
-# Getting started
+# Reading the database files
 
 My approach this time will be to start from the absolute bottom of the system, the file format. I chose this as a starting place because it's easy to test in addition to being well documented. From there I'll design a close-enough-to the source set of abstractions which are unit tested fairly comprehsively.
+
+Before we write any code, let's look at the directory for the code this section. You'll notice a pager, node, and cell in the backend - a util file, a main file, and a test suite. At this point, we create any folders and `__init__.py` files needed to support the structure. You'll also notice a `test.db` which we'll create using sqlite itself, and ideally be parsing out using our own code by the end of this exercise.
+
+```
+/pypopsql
+.
+├── main.py
+├── src
+│   ├── backend
+│   │   ├── __init__.py
+│   │   ├── node.py
+│   │   └── pager.py
+│   └── util.py
+├── test
+│   └── __init__.py
+└── test.db
+```
+
+# Getting started
 
 In approaching the build out this time, I figured the easiest thing to test against the functionality with SQLite was the file format, mainly because it would be simple to read and compare what SQLite actually writes. It's simple enough to create a database with a single table and then see what the file looks like on a byte, by byte level.
 
@@ -39,6 +42,7 @@ Once the database has been created you can also see how large it is. One questio
 ➜  budlightlime git:(bdillmann/popsql-1) ✗ ls -lh ~/projects/popsql/pypopsql/test.db
 -rw-r--r--  1 godzilla  staff   8.0K Aug  2 19:12 /Users/godzilla/projects/popsql/pypopsql/test.db
 ```
+
 
 It seems like the answer is yes. Creating a single user table with 2 rows yields an 8k file, which consulting the [file format](https://www.sqlite.org/fileformat2.html) leads me to believe that the page contents are as follows:
 
@@ -100,9 +104,13 @@ Something interesting to note is that page numbers are 1-indexed in the sqlite i
 
 As we continue to expand our implementation, there will also be a caching layer at the level of the Pager which will cache these blocks of data in memory for increased performance.
 
-### Reading the Node
+## Interfacing with the BTree
 
 SQLite like many other relational databases stores it's data in b-trees, a balanced tree which is designed to work best on disk. The simple reason for this is that each Node has a lot of children, because each node fits in a single page read. If a page is 4096 bytes, that means there can be a lot of child pointers in that page.
+
+There's lots of literature on how btrees work and why they're used by databases, so I'll omit that here but feel free to do your own research on this topic if you're interested. I'll dive right into reading the data.
+
+### Reading the Node
 
 Now that we have an abstraction for reading data to and from a database file, we'll be able to parse out some of the properties of the individual btree nodes. We'll start with the node header, which is the first 8 or 12 bytes of the page - depending on whether the page is an internal or leaf node.
 
@@ -126,10 +134,10 @@ def b2i(b: bytes):
     return int.from_bytes(b, 'big', signed=False)
 ```
 
-And the node parser:
+And the node parser, which includes a function for parsing the header as well as debug utility which allows us to see the values of the node.
 
 ```python
-# node.py
+# btree/node.py
 from enum import Enum
 from typing import Tuple
 
@@ -206,6 +214,31 @@ class Node:
         print('right pointer', self.right_pointer)
 ```
 
+And finishing this step up with a simple main file which allows us to test this behavior:
+
+```python
+def test_btree():
+    pager = Pager('test.db') # the test database we created earlier
+    data = pager.get_page(2) # read the second page, the one with our test table
+    node = Node(data)
+    node._debug_print_header(self)
+
+if __name__ == '__main__':
+    test_btree()
+```
+
+If we've done everything correctly, then running our main file should look like this:
+
+```
+➜  python3 main.py
+node type NodeType.TABLE_LEAF
+first freeblock 0
+cell content start 4069
+num fragmented bytes 0
+right pointer None
+```
+
+We should be able to read the row data now that we have the header being read appropriately.
 
 # Reading the test table node
 
