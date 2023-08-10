@@ -1,0 +1,631 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=HandheldFriendly content="True"><meta name=MobileOptimized content="320"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=referrer content="no-referrer"><meta name=description content><link href="https://fonts.googleapis.com/css?family=Open+Sans:400|Old+Standard+TT:400&display=swap" rel=stylesheet media=print type=text/css onload='this.media="all"'><title>popSQL part 1: reading the sqlite database file</title><link rel=canonical href=https://abudlightlime.com/posts/20230805-popsql-1-reading-db-pages/><style>*{border:0;font:inherit;font-size:100%;vertical-align:baseline;margin:0;padding:0;color:#000;text-decoration-skip:ink}body{font-family:open sans,myriad pro,Myriad,sans-serif;font-size:17px;line-height:160%;color:#1d1313;max-width:700px;margin:auto}p{margin:20px 0}a img{border:none}img{margin:10px auto;max-width:100%;display:block}.left-justify{float:left}.right-justify{float:right}pre,code{font:12px Consolas,liberation mono,Menlo,Courier,monospace;background-color:#f7f7f7}code{font-size:12px;padding:4px}pre{margin-top:0;margin-bottom:16px;word-wrap:normal;padding:16px;overflow:auto;font-size:85%;line-height:1.45}pre>code{padding:0;margin:0;font-size:100%;word-break:normal;white-space:pre;background:0 0;border:0}pre code{display:inline;padding:0;margin:0;overflow:visible;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}pre code::before,pre code::after{content:normal}em,q,em,dfn{font-style:italic}.sans,html .gist .gist-file .gist-meta{font-family:open sans,myriad pro,Myriad,sans-serif}.mono,pre,code,tt,p code,li code{font-family:Menlo,Monaco,andale mono,lucida console,courier new,monospace}.heading,.serif,h1,h2,h3{font-family:old standard tt,serif}strong{font-weight:600}q:before{content:"\201C"}q:after{content:"\201D"}del,s{text-decoration:line-through}blockquote{font-family:old standard tt,serif;text-align:center;padding:50px}blockquote p{display:inline-block;font-style:italic}blockquote:before,blockquote:after{font-family:old standard tt,serif;content:'\201C';font-size:35px;color:#403c3b}blockquote:after{content:'\201D'}hr{width:40%;height:1px;background:#403c3b;margin:25px auto}h1{font-size:35px}h2{font-size:28px}h3{font-size:22px;margin-top:18px}h1 a,h2 a,h3 a{text-decoration:none}h1,h2{margin-top:28px}#sub-header,.date{color:#403c3b;font-size:13px}#sub-header{margin:0 4px}#nav h1 a{font-size:35px;color:#1d1313;line-height:120%}.posts_listing a,#nav a{text-decoration:none}li{margin-left:20px}ul li{margin-left:5px}ul li{list-style-type:none}ul li:before{content:"\00BB \0020"}#nav ul li:before,.posts_listing li:before{content:'';margin-right:0}#content{text-align:left;width:100%;font-size:15px;padding:60px 0 80px}#content h1,#content h2{margin-bottom:5px}#content h2{font-size:25px}#content .entry-content{margin-top:15px}#content .date{margin-left:3px}#content h1{font-size:30px}.highlight{margin:10px 0}.posts_listing{margin:0 0 50px}.posts_listing li{margin:0 0 25px 15px}.posts_listing li a:hover,#nav a:hover{text-decoration:underline}#nav{text-align:center;position:static;margin-top:60px}#nav ul{display:table;margin:8px auto 0}#nav li{list-style-type:none;display:table-cell;font-size:15px;padding:0 20px}#links{display:flex;justify-content:space-between;margin:50px 0 0}#links :nth-child(1){margin-right:.5em}#links :nth-child(2){margin-left:.5em}#not-found{text-align:center}#not-found a{font-family:old standard tt,serif;font-size:200px;text-decoration:none;display:inline-block;padding-top:225px}@media(max-width:750px){body{padding-left:20px;padding-right:20px}#nav h1 a{font-size:28px}#nav li{font-size:13px;padding:0 15px}#content{margin-top:0;padding-top:50px;font-size:14px}#content h1{font-size:25px}#content h2{font-size:22px}.posts_listing li div{font-size:12px}}@media(max-width:400px){body{padding-left:20px;padding-right:20px}#nav h1 a{font-size:22px}#nav li{font-size:12px;padding:0 10px}#content{margin-top:0;padding-top:20px;font-size:12px}#content h1{font-size:20px}#content h2{font-size:18px}.posts_listing li div{font-size:12px}}@media(prefers-color-scheme:dark){*,#nav h1 a{color:#fdfdfd}body{background:#121212}pre,code{background-color:#262626}#sub-header,.date{color:#bababa}hr{background:#ebebeb}}</style></head><body><section id=nav><h1><a href=/>The Bud Light Lime Blog</a></h1><ul><li><a href=https://docs.google.com/document/d/1L_NP2sQIvnh4hndU-JbhczP-uAUPY5ie1_vsmrOdz_A>CV</a></li><li><a href=https://github.com/angles-n-daemons>Github</a></li><li><a href=https://www.linkedin.com/in/brian-dillmann-0a997979/>LinkedIn</a></li></ul></section><section id=content><h1>popSQL part 1: reading the sqlite database file</h1><div id=sub-header>August 2023 · 21 minute read</div><div class=entry-content><h1 id=reading-the-database-files>Reading the database files</h1><p>My approach this time will be to start from the absolute bottom of the system, the file format. I chose this as a starting place because it&rsquo;s easy to test in addition to being well documented. From there I&rsquo;ll design a close-enough-to the source set of abstractions which are unit tested fairly comprehsively.</p><p>Before we write any code, let&rsquo;s look at the directory for the code this section. You&rsquo;ll notice a pager, node, cell, and a record in the backend - a util and dbfile in the src directory, a main file, and a test suite. At this point, we create any folders and <code>__init__.py</code> files needed to support the structure. You&rsquo;ll also notice a <code>test.db</code> which we&rsquo;ll create using sqlite itself, and ideally be parsing out using our own code by the end of this exercise.</p><pre tabindex=0><code>/pypopsql
+.
+├── main.py
+├── src
+│   ├── backend
+│   │   ├── __init__.py
+│   │   ├── cell.py
+│   │   ├── node.py
+│   │   ├── record.py
+│   │   └── pager.py
+│   ├── dbinfo.py
+│   └── util.py
+├── test
+│   └── __init__.py
+│   ... various test files
+└── test.db
+</code></pre><p>I should note that this section will lean extremely heavily on the <a href=https://www.sqlite.org/fileformat2.html>file format</a> page in the SQLite documentation so I&rsquo;ll try to include locations to jump to as we start to write code.</p><h1 id=getting-started>Getting started</h1><p>It&rsquo;s simple enough to create a database with a single table and then see what the file looks like on a byte, by byte level.</p><pre tabindex=0><code>$ sqlite3 test.db
+&gt; CREATE TABLE test(col1 VARCHAR(2), col2 INTEGER);
+&gt; INSERT INTO test(col1, col2) VALUES (&#39;hi&#39;, 1), (&#39;yo&#39;, 2);
+</code></pre><p>Once the database has been created you can also see how large it is. One question I had that didn&rsquo;t seem immediately answered by the documentation was would a database with almost no data still fill up entire pages.</p><pre tabindex=0><code>➜  budlightlime git:(bdillmann/popsql-1) ✗ ls -lh ~/projects/popsql/pypopsql/test.db
+-rw-r--r--  1 godzilla  staff   8.0K Aug  2 19:12 /Users/godzilla/projects/popsql/pypopsql/test.db
+</code></pre><p>It seems like the answer is yes. Creating a single user table with 2 rows yields an 8k file, which consulting the file format leads me to believe that the page contents are as follows:</p><ul><li>Page 1. Header (.dbinfo) and Schema Table Leaf Node</li><li>Page 2. Table Leaf Node for the test table which I just created.</li></ul><p>I assume that the first page is going to be more complicated to parse than the second page, and a lot of the process for parsing the second page can be reused for the first page.</p><p>From here, I figure the minumum testable codebase will require:</p><ol><li>A pager for reading and writing to the database file.</li><li>An abstraction which takes database a database page and reads the header out of it.</li></ol><p>After this is done, I&rsquo;ll be able to go further by reading out the btree nodes as well as the row values stored inside of them.</p><h3 id=the-pager>The Pager</h3><p>The reason we use a pager is because reading and writing to disk often means doing so in fixed-size blocks, regardless of the size data passed. If the fixed-size is 512 bytes, reading 4 bytes will still at a mechanical level read 512 bytes from disk, writing 513 bytes will still write 1024 bytes because of how computers work. By adding a pager, which reads and writes in these fixed sizes - we optimize the IO bandwidth of our application.</p><p>See the below description on minimum addressible units and sectors wrt reading and writing from disk by ChatGPT.</p><blockquote><p>The minimum addressable unit on a disk refers to the smallest unit of data that can be read from or written to the disk. It is the basic building block of data storage and represents the smallest chunk of data that the disk controller or operating system can access and manipulate.</p><p>In most modern computer systems, the minimum addressable unit on a disk is known as a &ldquo;sector.&rdquo; A sector is a fixed-size portion of the disk&rsquo;s surface, and it is typically 512 bytes or 4 kilobytes (KB) in size. The sector size is determined by the disk&rsquo;s hardware and firmware and is an inherent property of the disk.</p><p>When data is read from or written to the disk, it must be done in multiples of the sector size. For example, if you want to store 1 KB of data on a disk with 512-byte sectors, the data will still occupy one whole sector, leaving some unused space. Similarly, if you want to store 4.5 KB of data, it will occupy nine sectors (4 KB) with some unused space within the last sector.</p><p>The concept of the minimum addressable unit on the disk is essential because it impacts how data is organized and stored on the storage medium. It also affects disk I/O operations and can influence the efficiency and performance of data access.</p><p>It&rsquo;s worth noting that advancements in storage technology, like Solid State Drives (SSDs) and newer disk formats, have introduced changes in the concept of the minimum addressable unit and the sector size. For instance, some modern SSDs have larger physical page sizes (e.g., 4KB or 8KB) for internal data management, even though the standard sector size presented to the operating system might still be 512 bytes or 4KB.</p></blockquote><p>With this in mind, a simple enough pager would look like the following:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># pager.py</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Pager</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        file_name: str,
+</span></span><span style=display:flex><span>        page_size: int <span style=color:#f92672>=</span> <span style=color:#ae81ff>4096</span>,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>file_name <span style=color:#f92672>=</span> file_name
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>page_size <span style=color:#f92672>=</span> page_size
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>get_page</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        page_number: int,
+</span></span><span style=display:flex><span>    ) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>with</span> open(self<span style=color:#f92672>.</span>file_name, <span style=color:#e6db74>&#39;rb+&#39;</span>) <span style=color:#66d9ef>as</span> file:
+</span></span><span style=display:flex><span>            file<span style=color:#f92672>.</span>seek(self<span style=color:#f92672>.</span>get_offset(page_number))
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> file<span style=color:#f92672>.</span>read(self<span style=color:#f92672>.</span>page_size)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>get_offset</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        page_number: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (page_number <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>) <span style=color:#f92672>*</span> self<span style=color:#f92672>.</span>page_size
+</span></span></code></pre></div><p>Something interesting to note is that page numbers are 1-indexed in the sqlite implementation, so I created a function for calculating the offset of the file so that calculating the offset is straightforward for any function requiring it in the future.</p><p>As we continue to expand our implementation, there will also be a caching layer at the level of the Pager which will cache these blocks of data in memory for increased performance.</p><h1 id=reading-the-database-header-or-dbinfo>Reading the database header, or .dbinfo</h1><p>Now that we have a pager reading data from disk let&rsquo;s try to parse out the header. The file format documentation specifies the header with the following table:</p><blockquote><table><thead><tr><th>Offset</th><th>Size</th><th>Description</th></tr></thead><tbody><tr><td>0</td><td>16</td><td>The header string: &ldquo;SQLite format 3\000&rdquo;</td></tr><tr><td>16</td><td>2</td><td>The database page size in bytes. Must be a power of two between 512 and 32768 inclusive, or the value 1 representing a page size of 65536.</td></tr><tr><td>18</td><td>1</td><td>File format write version. 1 for legacy; 2 for WAL.</td></tr><tr><td>19</td><td>1</td><td>File format read version. 1 for legacy; 2 for WAL.</td></tr><tr><td>20</td><td>1</td><td>Bytes of unused &ldquo;reserved&rdquo; space at the end of each page. Usually 0.</td></tr><tr><td>21</td><td>1</td><td>Maximum embedded payload fraction. Must be 64.</td></tr><tr><td>22</td><td>1</td><td>Minimum embedded payload fraction. Must be 32.</td></tr><tr><td>23</td><td>1</td><td>Leaf payload fraction. Must be 32.</td></tr><tr><td>24</td><td>4</td><td>File change counter.</td></tr><tr><td>28</td><td>4</td><td>Size of the database file in pages. The &ldquo;in-header database size&rdquo;.</td></tr><tr><td>32</td><td>4</td><td>Page number of the first freelist trunk page.</td></tr><tr><td>36</td><td>4</td><td>Total number of freelist pages.</td></tr><tr><td>40</td><td>4</td><td>The schema cookie.</td></tr><tr><td>44</td><td>4</td><td>The schema format number. Supported schema formats are 1, 2, 3, and 4.</td></tr><tr><td>48</td><td>4</td><td>Default page cache size.</td></tr><tr><td>52</td><td>4</td><td>The page number of the largest root b-tree page when in auto-vacuum or incremental-vacuum modes, or zero otherwise.</td></tr><tr><td>56</td><td>4</td><td>The database text encoding. A value of 1 means UTF-8. A value of 2 means UTF-16le. A value of 3 means UTF-16be.</td></tr><tr><td>60</td><td>4</td><td>The &ldquo;user version&rdquo; as read and set by the user_version pragma.</td></tr><tr><td>64</td><td>4</td><td>True (non-zero) for incremental-vacuum mode. False (zero) otherwise.</td></tr><tr><td>68</td><td>4</td><td>The &ldquo;Application ID&rdquo; set by PRAGMA application_id.</td></tr><tr><td>72</td><td>20</td><td>Reserved for expansion. Must be zero.</td></tr><tr><td>92</td><td>4</td><td>The version-valid-for number.</td></tr><tr><td>96</td><td>4</td><td>SQLITE_VERSION_NUMBER</td></tr></tbody></table></blockquote><p>First wew need a utility function for turning bytes into an integer and then write the code that reads the node header:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/util.py</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>b2i</span>(b: bytes) <span style=color:#f92672>-&gt;</span> int:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> int<span style=color:#f92672>.</span>from_bytes(b, <span style=color:#e6db74>&#39;big&#39;</span>, signed<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>)
+</span></span></code></pre></div><p>Now we can start reading the above database info with the below minimal <code>dbinfo.py</code> file:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/dbinfo.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> enum <span style=color:#f92672>import</span> Enum
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.util <span style=color:#f92672>import</span> b2i
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>FileFormatVersion</span>(Enum):
+</span></span><span style=display:flex><span>    LEGACY <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    WAL <span style=color:#f92672>=</span> <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DBInfo</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        header_str <span style=color:#f92672>=</span> data[:<span style=color:#ae81ff>16</span>]
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> header_str <span style=color:#f92672>!=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;SQLite format 3</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#39;</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>raise</span> <span style=color:#a6e22e>Exception</span>(<span style=color:#e6db74>&#39;header string not found, result is &#39;</span>, header_str)
+</span></span><span style=display:flex><span>        
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>page_size <span style=color:#f92672>=</span> b2i(data[<span style=color:#ae81ff>16</span>:<span style=color:#ae81ff>18</span>])
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>file_format_write_version <span style=color:#f92672>=</span> FileFormatVersion(data[<span style=color:#ae81ff>18</span>])
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>file_format_read_version <span style=color:#f92672>=</span> FileFormatVersion(data[<span style=color:#ae81ff>19</span>])
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;page size&#39;</span>, self<span style=color:#f92672>.</span>page_size)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;file format write version&#39;</span>, self<span style=color:#f92672>.</span>file_format_write_version)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;file format read version&#39;</span>, self<span style=color:#f92672>.</span>file_format_read_version)
+</span></span></code></pre></div><p>We can create a simple main file to test this behavior:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># main.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.dbinfo <span style=color:#f92672>import</span> DBInfo
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.backend.pager <span style=color:#f92672>import</span> Pager
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_dbinfo</span>():
+</span></span><span style=display:flex><span>    pager <span style=color:#f92672>=</span> Pager(<span style=color:#e6db74>&#39;test.db&#39;</span>) <span style=color:#75715e># the test database we created earlier</span>
+</span></span><span style=display:flex><span>    data <span style=color:#f92672>=</span> pager<span style=color:#f92672>.</span>get_page(<span style=color:#ae81ff>1</span>) <span style=color:#75715e># the first page of the database</span>
+</span></span><span style=display:flex><span>    dbinfo <span style=color:#f92672>=</span> DBInfo(data)
+</span></span><span style=display:flex><span>    dbinfo<span style=color:#f92672>.</span>_debug(self)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;__main__&#39;</span>:
+</span></span><span style=display:flex><span>    test_dbinfo()
+</span></span></code></pre></div><p>And if we run it we should see the following output:</p><pre tabindex=0><code>➜  python3 main.py
+page size 4096
+file format write version FileFormatVersion.LEGACY
+file format read version FileFormatVersion.LEGACY
+</code></pre><p>Great! For the sake of brevity I&rsquo;ve omitted the rest of the <code>DBInfo</code> definition, but feel free to look at the source link at the bottom of the page to see what the rest of it looks like.</p><h2 id=interfacing-with-the-btree>Interfacing with the BTree</h2><p>SQLite like many other relational databases stores it&rsquo;s data in b-trees, a balanced tree which is designed to work best on disk. The simple reason for this is that each Node has a lot of children, because each node fits in a single page read. If a page is 4096 bytes, that means there can be a lot of child pointers in that page.</p><p>There&rsquo;s lots of literature on how btrees work and why they&rsquo;re used by databases, so I&rsquo;ll omit that here but feel free to do your own research on this topic if you&rsquo;re interested. I&rsquo;ll dive right into reading the data.</p><h3 id=reading-the-node>Reading the Node</h3><p>Now that we have an abstraction for reading data to and from a database file, we&rsquo;ll be able to parse out some of the properties of the individual btree nodes. We&rsquo;ll start with the node header, which is the first 8 or 12 bytes of the page - depending on whether the page is an internal or leaf node.</p><p>The header is laid out bytewise like this:</p><blockquote><table><thead><tr><th>Offset</th><th>Size</th><th>Description</th></tr></thead><tbody><tr><td>0</td><td>1</td><td>The one-byte flag at offset 0 indicating the b-tree page type.</td></tr><tr><td>1</td><td>2</td><td>The two-byte integer at offset 1 gives the start of the first freeblock on the page, or is zero if there are no freeblocks.</td></tr><tr><td>3</td><td>2</td><td>The two-byte integer at offset 3 gives the number of cells on the page.</td></tr><tr><td>5</td><td>2</td><td>The two-byte integer at offset 5 designates the start of the cell content area. A zero value for this integer is interpreted as 65536.</td></tr><tr><td>7</td><td>1</td><td>The one-byte integer at offset 7 gives the number of fragmented free bytes within the cell content area.</td></tr><tr><td>8</td><td>4</td><td>The four-byte page number at offset 8 is the right-most pointer. This value appears in the header of interior b-tree pages only and is omitted from all other pages.</td></tr></tbody></table></blockquote><p>And the values for the page type byte:</p><blockquote><ul><li>A value of 2 (0x02) means the page is an interior index b-tree page.</li><li>A value of 5 (0x05) means the page is an interior table b-tree page.</li><li>A value of 10 (0x0a) means the page is a leaf index b-tree page.</li><li>A value of 13 (0x0d) means the page is a leaf table b-tree page.</li><li>Any other value for the b-tree page type is an error.</li></ul></blockquote><p>So we can create a node parser, which includes a function for parsing the header as well as debug utility which allows us to see the values of the node.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># btree/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> enum <span style=color:#f92672>import</span> Enum
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> typing <span style=color:#f92672>import</span> Tuple
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> util <span style=color:#f92672>import</span> b2i
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>NodeType</span>(Enum):
+</span></span><span style=display:flex><span>    INDEX_INTERIOR <span style=color:#f92672>=</span> <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>    TABLE_INTERIOR <span style=color:#f92672>=</span> <span style=color:#ae81ff>5</span>
+</span></span><span style=display:flex><span>    INDEX_LEAF <span style=color:#f92672>=</span> <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>    TABLE_LEAF <span style=color:#f92672>=</span> <span style=color:#ae81ff>13</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Node</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>data <span style=color:#f92672>=</span> data
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>page_size <span style=color:#f92672>=</span> len(data)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>node_type, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>cell_offset, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>num_cells, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>right_pointer, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>first_freeblock, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>num_fragmented_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_header_bytes(data)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_header_bytes</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>    ) <span style=color:#f92672>-&gt;</span> Tuple[
+</span></span><span style=display:flex><span>        NodeType,
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># num cells</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># cell_offset</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># right_pointer</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># first_freeblock</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># num_fragmented_bytes</span>
+</span></span><span style=display:flex><span>    ]:
+</span></span><span style=display:flex><span>        offset <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        node_type <span style=color:#f92672>=</span> NodeType(b2i(data[offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>0</span>: offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>]))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        first_freeblock <span style=color:#f92672>=</span> b2i(data[offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>: offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>3</span>])
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        num_cells <span style=color:#f92672>=</span> b2i(data[offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>3</span>: offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>5</span>])
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        cell_offset <span style=color:#f92672>=</span> b2i(data[offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>5</span>: offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>7</span>])
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        num_fragmented_bytes <span style=color:#f92672>=</span> data[offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>7</span>]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        right_pointer <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>not</span> self<span style=color:#f92672>.</span>is_leaf(node_type):
+</span></span><span style=display:flex><span>            right_pointer_bytes <span style=color:#f92672>=</span> data[offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>8</span>: offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>12</span>]
+</span></span><span style=display:flex><span>            right_pointer <span style=color:#f92672>=</span> b2i(right_pointer_bytes)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (
+</span></span><span style=display:flex><span>            node_type,
+</span></span><span style=display:flex><span>            cell_offset,
+</span></span><span style=display:flex><span>            num_cells,
+</span></span><span style=display:flex><span>            right_pointer,
+</span></span><span style=display:flex><span>            first_freeblock,
+</span></span><span style=display:flex><span>            num_fragmented_bytes,
+</span></span><span style=display:flex><span>        )
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>is_leaf</span>(self, node_type: NodeType <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>) <span style=color:#f92672>-&gt;</span> bool:
+</span></span><span style=display:flex><span>        node_type <span style=color:#f92672>=</span> node_type <span style=color:#f92672>or</span> self<span style=color:#f92672>.</span>node_type
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> node_type <span style=color:#f92672>in</span> (NodeType<span style=color:#f92672>.</span>TABLE_LEAF, NodeType<span style=color:#f92672>.</span>INDEX_LEAF)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;node type&#39;</span>, self<span style=color:#f92672>.</span>node_type)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;first freeblock&#39;</span>, self<span style=color:#f92672>.</span>first_freeblock)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;cell content start&#39;</span>, self<span style=color:#f92672>.</span>cell_offset)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;num fragmented bytes&#39;</span>, self<span style=color:#f92672>.</span>num_fragmented_bytes)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;right pointer&#39;</span>, self<span style=color:#f92672>.</span>right_pointer)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)
+</span></span></code></pre></div><p>And finishing this step up by modifying our main file which allows us to test this behavior:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># main.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.backend.node <span style=color:#f92672>import</span> Node
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.backend.pager <span style=color:#f92672>import</span> Pager
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_dbinfo</span>():
+</span></span><span style=display:flex><span>    <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_btree</span>():
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     pager <span style=color:#f92672>=</span> Pager(<span style=color:#e6db74>&#39;test.db&#39;</span>) <span style=color:#75715e># the test database we created earlier</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     data <span style=color:#f92672>=</span> pager<span style=color:#f92672>.</span>get_page(<span style=color:#ae81ff>2</span>) <span style=color:#75715e># read the second page, the one with our test table</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     node <span style=color:#f92672>=</span> Node(data)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     node<span style=color:#f92672>.</span>_debug(self)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;__main__&#39;</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>    test_dbinfo()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    test_btree()
+</span></span></code></pre></div><p>If we&rsquo;ve done everything correctly, then running our main file should look like this:</p><pre tabindex=0><code>➜  python3 main.py
+node type NodeType.TABLE_LEAF
+first freeblock 0
+cell content start 4069
+num fragmented bytes 0
+right pointer None
+</code></pre><p>We should be able to read the row data now that we have the header being read appropriately.</p><h1 id=reading-cell-pointers-and-content>Reading cell pointers and content</h1><p>In the btree literature, each record is referred to as a btree &ldquo;cell&rdquo;. Each btree node has a list of cell pointers immediately following the header, of which each points to some cell content. The cell content grows leftward from the end of the page, which means that the center of the page is occupied by empty space. The cell pointers are ordered, and the cell content isn&rsquo;t necessarily in the same order as the pointers. The layout of the page generally looks as follows:</p><pre tabindex=0><code>[h, cp1, cp2, cp3..., 0, 0, 0, 0, 0, ...cc3, cc2, cc1]
+
+h -&gt; header section
+cpi -&gt; cell pointer i, two byte pointer which points to the offset in the page where cell i&#39;s content lies
+cci -&gt; cell content i, variable sized payload for the actual information housed by cell i
+</code></pre><p>Let&rsquo;s get started by reading the cell pointers and then follow up later by reading the full cell content. We can create a minimal TableLeafCell implementation which holds only the pointer to the cell content as well as a debug function itself:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/cell.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>TableLeafCell</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        pointer: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>pointer <span style=color:#f92672>=</span> pointer
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;cell at index&#39;</span>, self<span style=color:#f92672>.</span>pointer)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)
+</span></span></code></pre></div><p>And then read the cells from our Node implementation. To do this we add a function <code>read_cells</code>, and add reading and storing the cells to the Node constructor, and modify our debug utility to print out the cell pointer values. For this step we&rsquo;ll only read the cell pointers to see that we&rsquo;re getting the right values.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.backend.cell <span style=color:#f92672>import</span> TableLeafCell
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Node</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(self<span style=color:#f92672>...</span>)
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>cells <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_cells(data)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_cells</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>    ) <span style=color:#f92672>-&gt;</span> List[any]:
+</span></span><span style=display:flex><span>        page_header_len <span style=color:#f92672>=</span> <span style=color:#ae81ff>8</span> <span style=color:#66d9ef>if</span> self<span style=color:#f92672>.</span>is_leaf() <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>12</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        cells <span style=color:#f92672>=</span> []
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(self<span style=color:#f92672>.</span>num_cells):
+</span></span><span style=display:flex><span>            offset <span style=color:#f92672>=</span> page_header_len <span style=color:#f92672>+</span> (i <span style=color:#f92672>*</span> <span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span>            p <span style=color:#f92672>=</span> b2i(data[offset:offset <span style=color:#f92672>+</span> <span style=color:#ae81ff>2</span>])
+</span></span><span style=display:flex><span>            cell <span style=color:#f92672>=</span> TableLeafCell(data, p)
+</span></span><span style=display:flex><span>            cells<span style=color:#f92672>.</span>append(cell)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> cells
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>is_leaf</span>(self, node_type: NodeType <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>) <span style=color:#f92672>-&gt;</span> bool:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> i, cell <span style=color:#f92672>in</span> enumerate(self<span style=color:#f92672>.</span>cells):
+</span></span><span style=display:flex><span>            cell<span style=color:#f92672>.</span>_debug()
+</span></span></code></pre></div><p>Testing our main function again, we should see the following output:</p><pre tabindex=0><code>➜  python3 main.py
+node type NodeType.TABLE_LEAF
+first freeblock 0
+cell content start 4069
+num fragmented bytes 0
+right pointer None
+
+
+cell at index 4077
+
+
+cell at index 4069
+</code></pre><p>Now that we&rsquo;re ready to read the cell content, we need to add a utility to parse varint values. Varints are a variable length integer format described in the sqlite documentation. The varints in the simplest terms are integers that have a length of 1-9 bytes where the first bit of each byte describes whether the integer has terminated, and the last 7 bits are the integer payload. This excepts the 9th byte if included which is always filled with 8 bits of payload information as the integer cannot carry on past the 9th byte.</p><p>Varints are used extensively in the sqlite data format, and will be required to parse the cell headers.</p><p>We add it here to the <code>util.py</code> file:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/util.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> typing <span style=color:#f92672>import</span> Tuple
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>b2i</span>(b: bytes) <span style=color:#f92672>-&gt;</span> int:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>varint</span>(b: bytes, cursor: int) <span style=color:#f92672>-&gt;</span> Tuple[int, int]:
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;&#34;&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    varint reads a variable length int from a byte string
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    it takes the following parameters
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>     - b: sequence of bytes, generally a full table page
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>     - cursor: starting index of the varint
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    and returns a tuple containing
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    - the value of the integer
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    - index of the cursor after the last byte of the varint
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    &#34;&#34;&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    result <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> j <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>8</span>):
+</span></span><span style=display:flex><span>        i <span style=color:#f92672>=</span> cursor <span style=color:#f92672>+</span> j
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e># read the next byte into an integer</span>
+</span></span><span style=display:flex><span>        byte_num <span style=color:#f92672>=</span> b[i]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e># result shifts left 7 bits, then the first 7 bits of byte_num are appended</span>
+</span></span><span style=display:flex><span>        result <span style=color:#f92672>=</span> (result <span style=color:#f92672>&lt;&lt;</span> <span style=color:#ae81ff>7</span>) <span style=color:#f92672>|</span> (byte_num <span style=color:#f92672>&amp;</span> <span style=color:#ae81ff>0x7f</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e># check the first bit of byte_num to see if we should continue reading</span>
+</span></span><span style=display:flex><span>        continue_reading <span style=color:#f92672>=</span> byte_num <span style=color:#f92672>&amp;</span> <span style=color:#ae81ff>0x80</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>not</span> continue_reading:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> result, cursor <span style=color:#f92672>+</span> j <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># read last byte, use all 8 bytes to fill the remaining spaces</span>
+</span></span><span style=display:flex><span>    byte_num <span style=color:#f92672>=</span> b[cursor <span style=color:#f92672>+</span> <span style=color:#ae81ff>8</span>]
+</span></span><span style=display:flex><span>    result <span style=color:#f92672>=</span> (result <span style=color:#f92672>&lt;&lt;</span> <span style=color:#ae81ff>8</span>) <span style=color:#f92672>|</span> byte_num
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> result, cursor <span style=color:#f92672>+</span> <span style=color:#ae81ff>9</span>
+</span></span></code></pre></div><p>In starting this exercise I modeled my tests after the comments in the source and found a typo which was nice. I was surprised how quick and responsive the community was to <a href=https://sqlite.org/forum/info/11fc7308d5e607f2>this inquiry</a>.</p><p>With this utility, we can begin to parse the cell payload for a table leaf as defined by the file format:</p><blockquote><p>Table B-Tree Leaf Cell (header 0x0d):</p><ul><li>A varint which is the total number of bytes of payload, including any overflow</li><li>A varint which is the integer key, a.k.a. &ldquo;rowid&rdquo;</li><li>The initial portion of the payload that does not spill to overflow pages.</li><li>A 4-byte big-endian integer page number for the first page of the overflow page list - omitted if all payload fits on the b-tree page.</li></ul></blockquote><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/cell.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>TableLeafCell</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        pointer: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>pointer <span style=color:#f92672>=</span> pointer
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       cursor <span style=color:#f92672>=</span> pointer
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>payload_size, cursor <span style=color:#f92672>=</span> varint(data, cursor)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>row_id, cursor <span style=color:#f92672>=</span> varint(data, cursor)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>payload_data <span style=color:#f92672>=</span> data[cursor:cursor <span style=color:#f92672>+</span> self<span style=color:#f92672>.</span>payload_size]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;cell at index&#39;</span>, self<span style=color:#f92672>.</span>pointer)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;payload size&#39;</span>, self<span style=color:#f92672>.</span>payload_size)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;row id&#39;</span>, self<span style=color:#f92672>.</span>row_id)
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)
+</span></span></code></pre></div><p>Running our main file one more time gives us a little more information:</p><pre tabindex=0><code>➜  python3 main.py
+node type NodeType.TABLE_LEAF
+first freeblock 0
+cell content start 4069
+num fragmented bytes 0
+right pointer None
+
+
+cell at index 4077
+payload size 5
+row id 1
+record data b&#39;\x03\x11\thi&#39;
+
+
+cell at index 4069
+payload size 6
+row id 2
+record data b&#39;\x03\x11\x01yo\x02&#39;
+</code></pre><h1 id=reading-records>Reading records</h1><p>At this point we&rsquo;re able to start reading the meat of what the database stores, the rows themselves also referred to as records.</p><p>The payload mentioned above in the cells is going to be the home for the record values.</p><p>The record starts with a header as well, which specifies how many bytes the row header will be.</p><p>The rest of the record header is a sequence of varints, each one corresponding with the type of the column.</p><p>The types are defined in the file format, which you can reference before looking at the example row header below:</p><pre tabindex=0><code>0x03 0x11 0x01
+ |     |    |
+ |     |    |
+ |     |    |
+ |     |     - second column a 8 bit twos-complement integer
+ |     |
+ |      - &gt; first column is a string of length (17-13) / 2 = 2 bytes long
+ |
+  - &gt; size of the header is 4 bytes (including this byte)
+</code></pre><p>We can create an Column class as well as a ColumnType class for reading this information effectively. It&rsquo;s a bit meaty so I&rsquo;ve omitted some of the values for brevity.</p><p>We&rsquo;ll also add a minimal Record class which takes the cell payload and parses out the column values.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/record.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> enum <span style=color:#f92672>import</span> Enum
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> typing <span style=color:#f92672>import</span> Tuple
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> dataclasses <span style=color:#f92672>import</span> dataclass
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.util <span style=color:#f92672>import</span> b2i, varint
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ColumnType</span>(Enum):
+</span></span><span style=display:flex><span>    TINYINT <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    TEXT <span style=color:#f92672>=</span> <span style=color:#ae81ff>13</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@classmethod</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_missing_</span>(cls, value: int):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> value <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>12</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> cls(value)
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>elif</span> value <span style=color:#f92672>%</span> <span style=color:#ae81ff>2</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> cls(<span style=color:#ae81ff>12</span>)
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>else</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> cls(<span style=color:#ae81ff>13</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@dataclass</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Column</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(self, column_type: ColumnType, length: int<span style=color:#f92672>=</span><span style=color:#66d9ef>None</span>):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>type <span style=color:#f92672>=</span> column_type
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>length <span style=color:#f92672>=</span> length
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __repr__(self):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;column: </span><span style=color:#e6db74>{</span>self<span style=color:#f92672>.</span>type<span style=color:#e6db74>}</span><span style=color:#e6db74>, </span><span style=color:#e6db74>{</span>self<span style=color:#f92672>.</span>length<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@classmethod</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>from_int</span>(cls, value: int):
+</span></span><span style=display:flex><span>        column_type <span style=color:#f92672>=</span> ColumnType(value)
+</span></span><span style=display:flex><span>        length <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e># calculate length for BLOB and TEXT types as documented</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> column_type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>BLOB:
+</span></span><span style=display:flex><span>            length <span style=color:#f92672>=</span> (value <span style=color:#f92672>-</span> <span style=color:#ae81ff>12</span>) <span style=color:#f92672>//</span> <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>elif</span> column_type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>TEXT:
+</span></span><span style=display:flex><span>            length <span style=color:#f92672>=</span> (value <span style=color:#f92672>-</span> <span style=color:#ae81ff>13</span>) <span style=color:#f92672>//</span> <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> cls(column_type, length)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Record</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        cursor: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>data <span style=color:#f92672>=</span> data
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>columns, cursor <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_column_types(data, cursor)
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>cursor <span style=color:#f92672>=</span> cursor
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_column_types</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        cursor: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        columns <span style=color:#f92672>=</span> []
+</span></span><span style=display:flex><span>        cursor_start <span style=color:#f92672>=</span> cursor
+</span></span><span style=display:flex><span>        num_bytes_header, cursor <span style=color:#f92672>=</span> varint(data, cursor)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>while</span> cursor <span style=color:#f92672>-</span> cursor_start <span style=color:#f92672>&lt;</span> num_bytes_header:
+</span></span><span style=display:flex><span>            column_type_int, cursor <span style=color:#f92672>=</span> varint(data, cursor)
+</span></span><span style=display:flex><span>            columns<span style=color:#f92672>.</span>append(Column<span style=color:#f92672>.</span>from_int(column_type_int))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> columns, cursor
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> i, column <span style=color:#f92672>in</span> enumerate(self<span style=color:#f92672>.</span>columns):
+</span></span><span style=display:flex><span>            print(<span style=color:#e6db74>&#39;column type&#39;</span>, column<span style=color:#f92672>.</span>type)
+</span></span></code></pre></div><p>If we add the Record type&rsquo;s debug call to our TableLeafCell implementation we should be able to test the column reading:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/cell.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> <span style=color:#f92672>from</span> src.backend.record <span style=color:#f92672>import</span> Record
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.util <span style=color:#f92672>import</span> varint
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>TableLeafCell</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        pointer: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>       self<span style=color:#f92672>.</span>payload_data <span style=color:#f92672>=</span> data[cursor:cursor <span style=color:#f92672>+</span> self<span style=color:#f92672>.</span>payload_size]
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>record <span style=color:#f92672>=</span> Record(data, cursor)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>       print(<span style=color:#e6db74>&#39;record data&#39;</span>, self<span style=color:#f92672>.</span>payload_data)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>record<span style=color:#f92672>.</span>_debug()
+</span></span><span style=display:flex><span>        print(<span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)
+</span></span></code></pre></div><p>If we rerun our main function again we should see the column types:</p><pre tabindex=0><code>➜  python3 main.py
+node type NodeType.TABLE_LEAF
+first freeblock 0
+cell content start 4069
+num fragmented bytes 0
+right pointer None
+
+
+cell at index 4077
+payload size 5
+row id 1
+column type ColumnType.TEXT
+column type ColumnType.ONE
+
+
+cell at index 4069
+payload size 6
+row id 2
+column type ColumnType.TEXT
+column type ColumnType.TINYINT
+</code></pre><p>Great! So now that we have the column types, we only need to parse the row values into the record and we should have our btree node parsing a full vertical slice of the page.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/record.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Record</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        cursor: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>columns, cursor <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_column_types(data, cursor)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>values, cursor <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_values(data, cursor)
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>cursor <span style=color:#f92672>=</span> cursor
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_column_types</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span>        cursor: int,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_values</span>(
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        self,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data: bytes,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        cursor: int,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    ):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        values <span style=color:#f92672>=</span> []
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>for</span> column <span style=color:#f92672>in</span> self<span style=color:#f92672>.</span>columns:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>            value, cursor <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_value(column<span style=color:#f92672>.</span>type, data, cursor, column<span style=color:#f92672>.</span>length)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>            values<span style=color:#f92672>.</span>append(value)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>return</span> values, cursor
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    <span style=color:#a6e22e>@staticmethod</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_value</span>(
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        column_type: ColumnType,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data: bytes,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        cursor: int,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        length: int <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    ) <span style=color:#f92672>-&gt;</span> Tuple[any, int]:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#f92672>...</span> <span style=color:#75715e># other if statements omitted</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>if</span> column_type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>TINYINT:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>            <span style=color:#66d9ef>return</span> int(data[cursor]), cursor <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>elif</span> column_type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>TEXT:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>            <span style=color:#66d9ef>return</span> data[cursor: cursor <span style=color:#f92672>+</span> length]<span style=color:#f92672>.</span>decode(<span style=color:#e6db74>&#39;utf-8&#39;</span>), cursor <span style=color:#f92672>+</span> length
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>else</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>            <span style=color:#66d9ef>raise</span> <span style=color:#a6e22e>Exception</span>(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;cannot parse column type </span><span style=color:#e6db74>{</span>column_type<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> i, column <span style=color:#f92672>in</span> enumerate(self<span style=color:#f92672>.</span>columns):
+</span></span><span style=display:flex><span>            print(<span style=color:#e6db74>&#39;column type&#39;</span>, column<span style=color:#f92672>.</span>type)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           print(<span style=color:#e6db74>&#39;value&#39;</span>, self<span style=color:#f92672>.</span>values[i])
+</span></span></code></pre></div><p>Testing again we should see the row values:</p><pre tabindex=0><code>cell at index 4077
+payload size 5
+row id 1
+column type ColumnType.TEXT
+value hi
+column type ColumnType.ONE
+value 1
+
+
+cell at index 4069
+payload size 6
+row id 2
+column type ColumnType.TEXT
+value yo
+column type ColumnType.TINYINT
+value 2
+</code></pre><p>We&rsquo;ve now completed reading a full btree node that was written by sqlite.</p><h1 id=reading-the-schema-page>Reading the schema page</h1><p>From <em>2.6. Storage Of The SQL Database Schema</em> in the SQLite file format document:</p><blockquote><p>Page 1 of a database file is the root page of a table b-tree that holds a special table named &ldquo;sqlite_schema&rdquo;. This b-tree is known as the &ldquo;schema table&rdquo; since it stores the complete database schema.</p></blockquote><p>And in <em>1.3. The Database Header</em></p><blockquote><p>The first 100 bytes of the database file comprise the database file header.</p></blockquote><p>Which means that for the first page of the database, we should be parsing both the header and a b-tree page. To account for the header offset we modify the Node file:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Node</span>:
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> __init__(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       db_header: bool<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>,
+</span></span><span style=display:flex><span>    ):
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>data <span style=color:#f92672>=</span> data
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>page_size <span style=color:#f92672>=</span> len(data)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>db_header <span style=color:#f92672>=</span> db_header
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>node_type, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>cell_offset, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>num_cells, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>right_pointer, \
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>first_freeblock, \
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>        self<span style=color:#f92672>.</span>num_fragmented_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_header_bytes(data)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        self<span style=color:#f92672>.</span>num_fragmented_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_header_bytes(data, db_header)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>       self<span style=color:#f92672>.</span>cells <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_cells(data)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>cells <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>read_cells(data, db_header)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_cells</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       db_header: bool<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>,
+</span></span><span style=display:flex><span>    ) <span style=color:#f92672>-&gt;</span> List[any]:
+</span></span><span style=display:flex><span>        page_header_len <span style=color:#f92672>=</span> <span style=color:#ae81ff>8</span> <span style=color:#66d9ef>if</span> self<span style=color:#f92672>.</span>is_leaf() <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>12</span>
+</span></span><span style=display:flex><span>        db_header_len <span style=color:#f92672>=</span> <span style=color:#ae81ff>100</span> <span style=color:#66d9ef>if</span> db_header <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        cells <span style=color:#f92672>=</span> []
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> i <span style=color:#f92672>in</span> range(self<span style=color:#f92672>.</span>num_cells):
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>           offset <span style=color:#f92672>=</span> page_header_len <span style=color:#f92672>+</span> (i <span style=color:#f92672>*</span> <span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           offset <span style=color:#f92672>=</span> db_header_len <span style=color:#f92672>+</span> page_header_len <span style=color:#f92672>+</span> (i <span style=color:#f92672>*</span> <span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span>            <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_header_bytes</span>(
+</span></span><span style=display:flex><span>        self,
+</span></span><span style=display:flex><span>        data: bytes,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       db_header: bool<span style=color:#f92672>=</span><span style=color:#66d9ef>False</span>,
+</span></span><span style=display:flex><span>    ) <span style=color:#f92672>-&gt;</span> Tuple[
+</span></span><span style=display:flex><span>        NodeType,
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># num cells</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># cell_offset</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># right_pointer</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># first_freeblock</span>
+</span></span><span style=display:flex><span>        int, <span style=color:#75715e># num_fragmented_bytes</span>
+</span></span><span style=display:flex><span>    ]:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       offset <span style=color:#f92672>=</span> <span style=color:#ae81ff>100</span> <span style=color:#66d9ef>if</span> db_header <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span></code></pre></div><p>And finally test reading the schema table page:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># main.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_btree</span>():
+</span></span><span style=display:flex><span>    <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_schema_page</span>():
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     pager <span style=color:#f92672>=</span> Pager(<span style=color:#e6db74>&#39;test.db&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     data <span style=color:#f92672>=</span> pager<span style=color:#f92672>.</span>get_page(<span style=color:#ae81ff>1</span>) <span style=color:#75715e># read the first page this time</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     dbinfo <span style=color:#f92672>=</span> DBInfo(data)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     dbinfo<span style=color:#f92672>.</span>_debug()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     node <span style=color:#f92672>=</span> Node(data, <span style=color:#66d9ef>True</span>) <span style=color:#75715e># pass in the db_header paramater to the Node constructor</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     node<span style=color:#f92672>.</span>_debug()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;__main__&#39;</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>   test_btree()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   test_schema_page()
+</span></span></code></pre></div><p>And we should see the following output:</p><pre tabindex=0><code>➜  python3 main.py
+page size 4096
+file format write version FileFormatVersion.LEGACY
+file format read version FileFormatVersion.LEGACY
+page reserved space 12
+maximum embedded payload fraction 64
+minimum embedded payload fraction 32
+leaf payload fraction 32
+file change counter 2
+database size in pages 2
+first freelist trunk page 0
+number of freelist pages 0
+schema cookie 1
+schema format number SchemaFormat.FORMAT_4
+default page cache size 0
+page of largest btree root 0
+user version 0
+text encoding TextEncoding.UTF_8
+incremental_vacuum_mode 0
+application id 0
+version valid for 2
+sqlite version number Version(major=3, minor=39, patch=5)
+node type NodeType.TABLE_LEAF
+first freeblock 0
+cell content start 4014
+num fragmented bytes 0
+right pointer None
+
+
+cell at index 4014
+payload size 68
+row id 1
+column type ColumnType.TEXT
+value table
+column type ColumnType.TEXT
+value test
+column type ColumnType.TEXT
+value test
+column type ColumnType.TINYINT
+value 2
+column type ColumnType.TEXT
+value CREATE TABLE test(col1 VARCHAR(2), col2 INTEGER)
+</code></pre><p>So by this point we should be able to fully parse each byte of the database we created. This ended up being a bit more work than I had expected, but you can see the full codebase on <a href=https://github.com/angles-n-daemons/pypopsql/tree/pypopsql/1/reading-the-db-file>github</a>.</p><p>Next week we&rsquo;ll get started writing the database files to disk.</p></div><div id=links><a href=https://abudlightlime.com/posts/20230803-popsql-0-recreating-sqlite/>&#171;&nbsp;popSQL part 0: a DB education through reverse-engineering</a></div></section></body></html>
