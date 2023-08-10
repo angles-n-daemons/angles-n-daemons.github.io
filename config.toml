@@ -5,8 +5,8 @@ DefaultContentLanguage = "en"
 theme = "black-and-light"
 preserveTaxonomyNames = true
 
-pygmentsstyle       = "bw"
-pygmentscodefences  = true
+pygmentsUseClassic = false
+pygmentsCodeFences = true
 
 [params]
   sitename = "The Bud Light Lime Blog"
