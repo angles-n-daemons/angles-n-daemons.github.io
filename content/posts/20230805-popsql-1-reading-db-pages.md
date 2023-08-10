@@ -9,7 +9,7 @@ categories: ["software"]
 
 My approach this time will be to start from the absolute bottom of the system, the file format. I chose this as a starting place because it's easy to test in addition to being well documented. From there I'll design a close-enough-to the source set of abstractions which are unit tested fairly comprehsively.
 
-Before we write any code, let's look at the directory for the code this section. You'll notice a pager, node, and cell in the backend - a util file, a main file, and a test suite. At this point, we create any folders and `__init__.py` files needed to support the structure. You'll also notice a `test.db` which we'll create using sqlite itself, and ideally be parsing out using our own code by the end of this exercise.
+Before we write any code, let's look at the directory for the code this section. You'll notice a pager, node, cell, and a record in the backend - a util and dbfile in the src directory, a main file, and a test suite. At this point, we create any folders and `__init__.py` files needed to support the structure. You'll also notice a `test.db` which we'll create using sqlite itself, and ideally be parsing out using our own code by the end of this exercise.
 
 ```
 /pypopsql
@@ -34,7 +34,7 @@ I should note that this section will lean extremely heavily on the [file format]
 
 # Getting started
 
-In approaching the build out this time, I figured the easiest thing to test against the functionality with SQLite was the file format, mainly because it would be simple to read and compare what SQLite actually writes. It's simple enough to create a database with a single table and then see what the file looks like on a byte, by byte level.
+It's simple enough to create a database with a single table and then see what the file looks like on a byte, by byte level.
 
 ```
 $ sqlite3 test.db
@@ -319,7 +319,7 @@ class Node:
         print('\n')
 ```
 
-And finishing this step up with a simple main file which allows us to test this behavior:
+And finishing this step up by modifying our main file which allows us to test this behavior:
 
 ```python
 # main.py
@@ -494,9 +494,12 @@ In starting this exercise I modeled my tests after the comments in the source an
 
 With this utility, we can begin to parse the cell payload for a table leaf as defined by the file format:
 
- * A payload size varint, which includes itself in the total definition
- * A rowid value as a varint
- * The actual row data, which is encoded in a later defined format
+> Table B-Tree Leaf Cell (header 0x0d):
+> 
+> * A varint which is the total number of bytes of payload, including any overflow
+> * A varint which is the integer key, a.k.a. "rowid"
+> * The initial portion of the payload that does not spill to overflow pages.
+> * A 4-byte big-endian integer page number for the first page of the overflow page list - omitted if all payload fits on the b-tree page.
 
 
 ```python
@@ -544,7 +547,7 @@ cell at index 4069
 payload size 6
 row id 2
 record data b'\x03\x11\x01yo\x02'
-```
+* ```
 
 # Reading records
 
