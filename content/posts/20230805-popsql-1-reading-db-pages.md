@@ -918,6 +918,6 @@ column type ColumnType.TEXT
 value CREATE TABLE test(col1 VARCHAR(2), col2 INTEGER)
 ```
 
-So by this point we should be able to fully parse each byte of the database we created. This ended up being a bit more work than I had expected, but you can see the full codebase on [github](https://github.com/angles-n-daemons/pypopsql/tree/pypopsql/1/reading-the-db-file).
+So by this point we should be able to fully parse each byte of the database we created. This ended up being a bit more work than I had expected, but you can see the full codebase on [github](https://github.com/angles-n-daemons/pypopsql/tree/4cfca9c).
 
 Next week we'll get started writing the database files to disk.
