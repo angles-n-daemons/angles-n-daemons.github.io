@@ -547,7 +547,7 @@ cell at index 4069
 payload size 6
 row id 2
 record data b'\x03\x11\x01yo\x02'
-* ```
+```
 
 # Reading records
 
@@ -847,6 +847,8 @@ class Node:
         ...
 ```
 
+And finally test reading the schema table page:
+
 ```python
 # main.py
 
@@ -854,15 +856,15 @@ class Node:
 def test_btree():
     ...
 
-def test_schema_page():
-    pager = Pager('test.db')
-    data = pager.get_page(1) # read the first page this time
-
-    dbinfo = DBInfo(data)
-    dbinfo._debug()
-
-    node = Node(data, True) # pass in the db_header paramater to the Node constructor
-    node._debug()
++ def test_schema_page():
++     pager = Pager('test.db')
++     data = pager.get_page(1) # read the first page this time
++ 
++     dbinfo = DBInfo(data)
++     dbinfo._debug()
++ 
++     node = Node(data, True) # pass in the db_header paramater to the Node constructor
++     node._debug()
 
 if __name__ == '__main__':
 -   test_btree()
