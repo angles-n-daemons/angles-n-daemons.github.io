@@ -920,4 +920,6 @@ value CREATE TABLE test(col1 VARCHAR(2), col2 INTEGER)
 
 So by this point we should be able to fully parse each byte of the database we created. This ended up being a bit more work than I had expected, but you can see the full codebase on [github](https://github.com/angles-n-daemons/pypopsql/tree/4cfca9c).
 
+You'll also see in this codebase that there are tests which test a lot of the behavior covered in this post. The details on the tests have been omitted for brevity, but in the following posts we'll talk about adding new tests and modifying these existing ones so that we can test additional behavior on modifying the BTree.
+
 Next week we'll get started writing the database files to disk.
