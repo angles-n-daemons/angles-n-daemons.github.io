@@ -13,8 +13,8 @@ pygmentsCodeFences = true
   disableWebFonts = false
 
 [[menu.main]]
-    name = "CV"
-    url  = "https://docs.google.com/document/d/1L_NP2sQIvnh4hndU-JbhczP-uAUPY5ie1_vsmrOdz_A"
+    name = "Resume"
+    url  = "https://docs.google.com/document/d/1jkPJ6dlcMnNd-sNn2veAx8Qzf7CQFBuAtXS1_ZSWjig/edit"
 [[menu.main]]
     name = "Github"
     url  = "https://github.com/angles-n-daemons"
