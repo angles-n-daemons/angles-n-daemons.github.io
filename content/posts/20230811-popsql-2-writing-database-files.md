@@ -186,15 +186,11 @@ bytes.append(x % 128)
 x = x >> 7
 ```
 
-But this turns out not to be the right approach. For one, the bytes are going to be in the wrong order (smallest left) and for another we're going to be unsure how large the last byte is to be. Giving this another go, I'll start by trying to figure out what the smallest varint that can have 8 bits in the last byte can be. This integer is:
+But this turns out not to be the right approach. For one, the bytes are going to be in the wrong order (smallest left) and for another we're going to be unsure how large the last byte is to be. In this particular case, the last byte we refer to is the last byte read, which will be the first byte written due to how we intend to pull off the bits.
 
-```
-0000 0010 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
-```
+We can find out if 9 bytes will be needed by seeimg if any of the first 7 bits of the long are filled. If any of them are filled (1), we will need a full 9 bytes to express the varint and therefore our first byte written will be 8 bits in size.
 
-Because if the 7th bit of the integer is significant, it requires there to be the full 9 byte payload. In hexidecimal this integer is:
-
-0x0200000000000000
+This is simple enough to express with an arithmetic or operation: `requires_9_bytes = bool(0xfe00000000000000 & x)`
 
 We can use this to modify our `to_varint` implementation to say whether the first byte that needs to be pulled off is to be the 9th byte of our varint. Then we can insert instead of append the bytes in order until the payload is filled.
 
