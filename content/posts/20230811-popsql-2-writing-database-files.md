@@ -552,11 +552,146 @@ If we did everything right this test should still pass. We've taken the first st
 
 # Serializing the database header and schema page
 
-SECTION: Right pad accordingly
+The database header should be simple enough, we just reserialize the bytes in the way that we found them. If they changed along the way we reflect those changes in our output. We can nearly copy the order that we found in the DBInfo constructor, with the exception of the version number. The only difference will be that we need to manually place in the 20 bytes of reserved space between indicies 72 and 92.
 
+```python
+# src/dbinfo.py
+...
+    def to_bytes(self) -> bytes:
++        data = b'SQLite format 3\x00'
++        
++        data += self.page_size.to_bytes(2)
++
++        data += self.file_format_write_version.value.to_bytes(1)
++        data += self.file_format_read_version.value.to_bytes(1)
++
++        data += self.page_end_reserved_space.to_bytes(1)
++        
++        data += self.maximum_embedded_payload_fraction.to_bytes(1)
++        data += self.minimum_embedded_payload_fraction.to_bytes(1)
++        data += self.leaf_payload_fraction.to_bytes(1)
++
++        data += self.file_change_counter.to_bytes(4)
++
++        data += self.db_size_in_pages.to_bytes(4)
++        data += self.first_freelist_trunk_page.to_bytes(4)
++        data += self.num_freelist_pages.to_bytes(4)
++
++        data += self.schema_cookie.to_bytes(4)
++        data += self.schema_format_number.value.to_bytes(4)
++
++        data += self.default_page_cache_size.to_bytes(4)
++        data += self.largest_btree_root_page.to_bytes(4)
++        data += self.text_encoding.value.to_bytes(4)
++        data += self.user_version.to_bytes(4)
++
++        data += self.incremental_vacuum_mode.to_bytes(4)
++        data += self.application_id.to_bytes(4)
++
++        # reserved expansion space
++        data += bytes([0x00] * 20)
++
++        data += self.version_valid_for.to_bytes(4)
++        data += self.version.to_bytes()
++        return data
+-        return bytes([])
+```
 
-Additionally, since we're still dealing with leaf nodes only - we don't need to worry about the 
+We can then add the corresponding function for serializing the version:
 
-SQLite right pads the database pages - of which the setting when I created a db from scratch was 12 bytes of padding. Per the docs this information is included in the header:
+```python
+# src/dbinfo.py
+...
+class Version:
+...
+    def to_int(self) -> int:
+        return (self.major * 1000000) + \
+               (self.minor * 1000) + \
+               self.patch
+
+    def to_bytes(self) -> bytes:
+        return self.to_int().to_bytes(4)
+```
+
+And now that we have the serialization fully wired up for the DBInfo we can add a new test to ensure the system is working end to end.
+
+```python
+# test/test_dbinfo.py
+...
++   def test_dbinfo_to_bytes(self):
++       dbinfo = DBInfo(EXAMPLE_DBINFO_BYTES)
++       # test first hundred bytes
++       self.assertEqual(EXAMPLE_DBINFO_BYTES[:100], dbinfo.to_bytes())
+
+if __name__ == '__main__':
+```
+
+There's one last thing to do before we're able to serialize the inbound `test.db` file. SQLite right pads the database pages - of which the setting when I created a db from scratch was 12 bytes of padding. Per the docs this information is included in the header:
 
 ```20   1   Bytes of unused "reserved" space at the end of each page. Usually 0.```
+
+We need to use this information from the header to do two things:
+ - Modify the starting offset for the cell content area
+ - Add additional padded bytes when we serialize a node
+
+Let's start by modifying our `cells_bytes` function to add this behavior:
+
+```python
+# src/backend/node.py
+...
+-   def cells_bytes(self) -> Tuple[...]:
++   def cells_bytes(self, reserved_bytes=0) -> Tuple[...]:
+        cell_pointer_bytes = bytes([])
+        cell_content_bytes = bytes([])
+
+-       pointer = self.page_size
++       pointer = self.page_size - reserved_bytes
+        for cell in self.cells:
+            ...
+
++       cell_content_bytes += bytes([0x00] * reserved_bytes)
+
+        return (cell_pointer_bytes, cell_content_bytes, pointer)
+```
+
+And then we can use the `dbinfo` parameter from `to_bytes` to pass this information in:
+
+```python
+    def to_bytes(self, dbinfo: DBInfo) -> bytes:
+        db_header_len = 100 if self.has_db_header else 0
+
+-        cell_pointer_bytes, cell_content_bytes, cell_content_start = self.cells_bytes()
++        cell_pointer_bytes, cell_content_bytes, cell_content_start = self.cells_bytes(dbinfo.page_end_reserved_space)
+```
+
+Finally, we can test that the schema page is being serialized properly - header and all:
+
+```
+# test/backend/test_node.py
+...
+    def test_schema_header_page(self):
+        ...
+        self.assertEqual(cell.record.cursor, 4084)
++       serialized_page = dbinfo.to_bytes() + node.to_bytes(dbinfo)
++       self.assertEqual(data, serialized_page)
+```
+
+And finally, we can try to read our `test.db` file and create a `generated.db` file which hopefully SQLite can read:
+
+```
+➜  touch generated.db
+➜  python3 main.py
+➜  sqlite3 generated.db
+
+SQLite version 3.39.5 2022-10-14 20:58:05
+Enter ".help" for usage hints.
+sqlite> .tables
+test
+
+sqlite> select * from test;
+hi|1
+yo|2
+```
+
+And just like that we've fully a fully valid SQLite database with one user table from scratch.
+
