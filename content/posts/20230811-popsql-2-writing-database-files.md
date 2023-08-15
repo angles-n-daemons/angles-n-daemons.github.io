@@ -384,6 +384,179 @@ We also need to keep track of the page padding that's built into the SQLite engi
 
 All of this requires a good amount of simple, yet precise arithmetic so we need to be careful with this step as it is probably mechanically the most complex step we've dealt with.
 
+<note about the header>. As discussed last week, the header looks like this in a byte-by-byte level:
+
+> | Offset | Size | Description |
+> | ------ | ---- | ----------- |
+> | 0  | 1  | The one-byte flag at offset 0 indicating the b-tree page type.
+> | 1  | 2  | The two-byte integer at offset 1 gives the start of the first freeblock on the page, or is zero if there are no freeblocks.
+> | 3  | 2  | The two-byte integer at offset 3 gives the number of cells on the page.
+> | 5  | 2  | The two-byte integer at offset 5 designates the start of the cell content area. A zero value for this integer is interpreted as 65536.
+> | 7  | 1  | The one-byte integer at offset 7 gives the number of fragmented free bytes within the cell content area.
+> | 8  | 4  | The four-byte page number at offset 8 is the right-most pointer. This value appears in the header of interior b-tree pages only and is omitted from all other pages.
+
+And the values for the page type byte:
+> * A value of 2 (0x02) means the page is an interior index b-tree page.
+> * A value of 5 (0x05) means the page is an interior table b-tree page.
+> * A value of 10 (0x0a) means the page is a leaf index b-tree page.
+> * A value of 13 (0x0d) means the page is a leaf table b-tree page.
+> * Any other value for the b-tree page type is an error.
+
+One of the benefits of our approach is that since we're not concerned for speed, and because we deserialize the payload in full into Python objects - we don't need to think about freeblocks and fragmented bytes. We pack the cells tightly together in the page, which gives us the benefit of simplicity at the expense of performance. Something to note before we get started however is that we won't have the starting location of the cell content until we serialize the cell, so for now we'll leave that blank. We can do this by adding a `header_bytes` function to the Node like we did for the Record:
+
+```python
+# src/backend/node.py
+
+    def header_bytes(self, cell_offset: int=0) -> bytes:
+        node_type_bytes = self.node_type.value.to_bytes(1)
+        first_freeblock_bytes = (0).to_bytes(2)
+        num_cells_bytes = len(self.cells).to_bytes(2)
+        cell_offset_bytes = (cell_offset)
+        num_fragmented_bytes = (0).to_bytes(1)
+
+        return node_type_bytes + \
+               first_freeblock_bytes + \
+               num_cells_bytes + \
+               cell_offset_bytes + \
+               num_fragmented_bytes
+
+    def to_bytes(self) -> bytes:
+...
+```
+
+If we want, we can modify our table leaf node test to verify this behavior:
+
+```python
+# test/backend/node.py
+
+...
+    def test_table_leaf_parse(self):
+...
+        self.assertEqual(node.cells[1].cursor, 25)
+
++       header_bytes = data[:8]
++       self.assertEquals(header_bytes, node.header_bytes(17))
+```
+
+From here we can add another function `cells_bytes` which will give us:
+ - A section of bytes which corresponds to the 2-byte cell pointer list
+ - A section of bytes corresponding to the cell content block
+ - The integer location of the start of the cell content area (used in the header)
+
+We have some creative direction here as well. Since the format doesn't specify which order the cell content needs to be in, we could either have the cell content left to right like:
+
+```
+[node header, cell pointer 1, cell pointer 2, .... cell content 1, cell content 2]
+```
+
+Or in the reverse, right to left like:
+
+```
+[node header, cell pointer 1, cell pointer 2, .... cell content 2, cell content 1]
+```
+
+The latter option is easier, as it allows us to calculate the offsets in the order that the cell pointers appear. Additionally this is the approach taken by SQLite in our test.db file, so it allows us to be consistent with the engine's behavior. We can generate these values with the following code:
+
+```python
+# src/backend/node.py
+
++   def cells_bytes(self) -> Tuple[
++       bytes, # cell pointer bytes
++       bytes, # cell content bytes
++       int, # cell content start pointer
++   ]:
++       cell_pointer_bytes = bytes([])
++       cell_content_bytes = bytes([])
++
++       pointer = self.page_size
++       for cell in self.cells:
++           content_bytes = cell.to_bytes()
++           pointer = pointer - len(content_bytes)
++           pointer_bytes = pointer.to_bytes(2)
++
++           cell_pointer_bytes += pointer_bytes
++           cell_content_bytes = content_bytes + cell_content_bytes # content grows leftward
+
+        return (cell_pointer_bytes, cell_content_bytes, pointer)
+
+    def to_bytes(self, dbinfo: DBInfo) -> bytes:
+```
+
+Note how the we calculate the pointer locations, which move leftward as we serialize each cell. Reasoning about this, consider the following example of theoretical 32 byte page with two cells:
+
+```
+cell 1 - length 3
+cell 2 - length 4
+
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+```
+
+We're aiming for cell 1 to start at 29, occupying bytes 29, 30, and 31 and for cell 2 to start at 25, occupying bytes 25, 26, 27, and 28. Using the code above, the pointer starts at 32. When we serialize cell 1, we calculate its pointer to be 32 - 3, which is 29; the location we were aiming for and when we serialize cell 2, we calculate its pointer to be 29 - 4, which is 25; also what we were aiming for. When the function exits, it returns 25 as the cell content start location - which is also the value we are targeting.
+
+We don't yet protect for the cell content overflowing the page, nor do we pad the page with reserved bytes as specified in the DBInfo file, but that's something we'll get into after we are able to write out the database header. For now we can finish our first pass at our `to_bytes` function on the Node.
+
+There's one more bit of arithmetic to perform on this section and this is to calculate the number of null bytes between the cell pointer array and the cell content block. We need to take into account the following information:
+ - The page size of the node
+ - The size of the database header
+ - The size of the node header
+ - The size of the cell pointer array
+ - The size of the cell content block
+
+We also will need to account for the reserved bytes when we are able to account for the database configuration, but for now this should give us plenty to think about. The `to_bytes` function will serialize the cell content and pointers, serialize the node header, calculate and create the null byte space in the middle, and return those items formatted in a contiguous block. The output should be the size of a database page, so if it's not we can also halt and notify ourselves if it's not.
+
+Visualizing the layout using the above example, we can imagine that bytes 0-7 will be occupied by the header, bytes 9-11 are occupied by the cell pointer array, and bytes 25-31 are occupied by the cell content block.
+
+```
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+ | ------------------ | cell header
+                         | -------- | cell pointer array                  
+                                                                        cell content block | --------------------- |
+                                       | ---------------------------------------------- | free space
+```
+
+Which means that cells 12 - 24 should be empty space, which totals 13 bytes. Using the equation `page size - (header size + pointer array size + content block size)` works out to `32 - (8 + 4 + 7) = 13` which will be an effective calculation for the number of bytes of empty space. We can write out our function below:
+
+```python
+# src/backend/node.py
+
+...
+
+    def to_bytes(self, dbinfo: DBInfo) -> bytes:
++       db_header_len = 100 if self.has_db_header else 0
++
++       cell_pointer_bytes, cell_content_bytes, cell_content_start = self.cells_bytes()
++       header_bytes = self.header_bytes(cell_content_start)
++
++       total_content_len = db_header_len + len(header_bytes) + len(cell_pointer_bytes) + len(cell_content_bytes)
++       num_null_bytes = self.page_size - total_content_len
++
++       if num_null_bytes < 0:
++           raise ValueError(f'node page overflows by {abs(num_null_bytes)} bytes')
++
++       null_bytes = bytes([0x00] * num_null_bytes)
++       
++       return header_bytes + cell_pointer_bytes + null_bytes + cell_content_bytes
+-       return bytes([])
+```
+
+And use our existing test to verify its behavior:
+
+```python
+# test/backend/node.py
+...
+        self.assertEqual(header_bytes, node.header_bytes(17))
++       self.assertEqual(data, node.to_bytes(None))
+```
+
+If we did everything right this test should still pass. We've taken the first step for serializing full database pages, now we can move onto the database header.
+
+# Serializing the database header and schema page
+
+SECTION: Right pad accordingly
+
+
+Additionally, since we're still dealing with leaf nodes only - we don't need to worry about the 
+
 SQLite right pads the database pages - of which the setting when I created a db from scratch was 12 bytes of padding. Per the docs this information is included in the header:
 
 ```20   1   Bytes of unused "reserved" space at the end of each page. Usually 0.```
