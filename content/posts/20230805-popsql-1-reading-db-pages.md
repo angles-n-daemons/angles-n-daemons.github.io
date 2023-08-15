@@ -142,7 +142,7 @@ Now that we have a pager reading data from disk let's try to parse out the heade
 > | 92 |  4  |  The version-valid-for number.
 > | 96 |  4  |  SQLITE_VERSION_NUMBER 
 
-First wew need a utility function for turning bytes into an integer and then write the code that reads the node header:
+First we need a utility function for turning bytes into an integer and then write the code that reads the node header:
 
 ```python
 # src/util.py
