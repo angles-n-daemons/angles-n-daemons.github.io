@@ -1,0 +1,446 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=HandheldFriendly content="True"><meta name=MobileOptimized content="320"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=referrer content="no-referrer"><meta name=description content><link href="https://fonts.googleapis.com/css?family=Open+Sans:400|Old+Standard+TT:400&display=swap" rel=stylesheet media=print type=text/css onload='this.media="all"'><title>popSQL part 2: writing the sqlite database file</title><link rel=canonical href=https://abudlightlime.com/posts/20230811-popsql-2-writing-database-files/><style>*{border:0;font:inherit;font-size:100%;vertical-align:baseline;margin:0;padding:0;color:#000;text-decoration-skip:ink}body{font-family:open sans,myriad pro,Myriad,sans-serif;font-size:17px;line-height:160%;color:#1d1313;max-width:700px;margin:auto}p{margin:20px 0}a img{border:none}img{margin:10px auto;max-width:100%;display:block}.left-justify{float:left}.right-justify{float:right}pre,code{font:12px Consolas,liberation mono,Menlo,Courier,monospace;background-color:#f7f7f7}code{font-size:12px;padding:4px}pre{margin-top:0;margin-bottom:16px;word-wrap:normal;padding:16px;overflow:auto;font-size:85%;line-height:1.45}pre>code{padding:0;margin:0;font-size:100%;word-break:normal;white-space:pre;background:0 0;border:0}pre code{display:inline;padding:0;margin:0;overflow:visible;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}pre code::before,pre code::after{content:normal}em,q,em,dfn{font-style:italic}.sans,html .gist .gist-file .gist-meta{font-family:open sans,myriad pro,Myriad,sans-serif}.mono,pre,code,tt,p code,li code{font-family:Menlo,Monaco,andale mono,lucida console,courier new,monospace}.heading,.serif,h1,h2,h3{font-family:old standard tt,serif}strong{font-weight:600}q:before{content:"\201C"}q:after{content:"\201D"}del,s{text-decoration:line-through}blockquote{font-family:old standard tt,serif;text-align:center;padding:50px}blockquote p{display:inline-block;font-style:italic}blockquote:before,blockquote:after{font-family:old standard tt,serif;content:'\201C';font-size:35px;color:#403c3b}blockquote:after{content:'\201D'}hr{width:40%;height:1px;background:#403c3b;margin:25px auto}h1{font-size:35px}h2{font-size:28px}h3{font-size:22px;margin-top:18px}h1 a,h2 a,h3 a{text-decoration:none}h1,h2{margin-top:28px}#sub-header,.date{color:#403c3b;font-size:13px}#sub-header{margin:0 4px}#nav h1 a{font-size:35px;color:#1d1313;line-height:120%}.posts_listing a,#nav a{text-decoration:none}li{margin-left:20px}ul li{margin-left:5px}ul li{list-style-type:none}ul li:before{content:"\00BB \0020"}#nav ul li:before,.posts_listing li:before{content:'';margin-right:0}#content{text-align:left;width:100%;font-size:15px;padding:60px 0 80px}#content h1,#content h2{margin-bottom:5px}#content h2{font-size:25px}#content .entry-content{margin-top:15px}#content .date{margin-left:3px}#content h1{font-size:30px}.highlight{margin:10px 0}.posts_listing{margin:0 0 50px}.posts_listing li{margin:0 0 25px 15px}.posts_listing li a:hover,#nav a:hover{text-decoration:underline}#nav{text-align:center;position:static;margin-top:60px}#nav ul{display:table;margin:8px auto 0}#nav li{list-style-type:none;display:table-cell;font-size:15px;padding:0 20px}#links{display:flex;justify-content:space-between;margin:50px 0 0}#links :nth-child(1){margin-right:.5em}#links :nth-child(2){margin-left:.5em}#not-found{text-align:center}#not-found a{font-family:old standard tt,serif;font-size:200px;text-decoration:none;display:inline-block;padding-top:225px}@media(max-width:750px){body{padding-left:20px;padding-right:20px}#nav h1 a{font-size:28px}#nav li{font-size:13px;padding:0 15px}#content{margin-top:0;padding-top:50px;font-size:14px}#content h1{font-size:25px}#content h2{font-size:22px}.posts_listing li div{font-size:12px}}@media(max-width:400px){body{padding-left:20px;padding-right:20px}#nav h1 a{font-size:22px}#nav li{font-size:12px;padding:0 10px}#content{margin-top:0;padding-top:20px;font-size:12px}#content h1{font-size:20px}#content h2{font-size:18px}.posts_listing li div{font-size:12px}}@media(prefers-color-scheme:dark){*,#nav h1 a{color:#fdfdfd}body{background:#121212}pre,code{background-color:#262626}#sub-header,.date{color:#bababa}hr{background:#ebebeb}}</style></head><body><section id=nav><h1><a href=/>The Bud Light Lime Blog</a></h1><ul><li><a href=https://github.com/angles-n-daemons>Github</a></li><li><a href=https://www.linkedin.com/in/brian-dillmann-0a997979/>LinkedIn</a></li><li><a href=https://docs.google.com/document/d/1jkPJ6dlcMnNd-sNn2veAx8Qzf7CQFBuAtXS1_ZSWjig/edit>Resume</a></li></ul></section><section id=content><h1>popSQL part 2: writing the sqlite database file</h1><div id=sub-header>August 2023 · 20 minute read</div><div class=entry-content><h1 id=writing-out-what-we-read>Writing out what we read</h1><p>The next part of this exercise is going to be writing back out the database files we read in. Hopefully by the end of the exercise we should be able to run this new function in our main file:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># main.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_file_end_to_end</span>():
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#75715e># create the pagers for both the old and new dbs</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     old_db_pager <span style=color:#f92672>=</span> Pager(<span style=color:#e6db74>&#39;test.db&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     new_db_pager <span style=color:#f92672>=</span> Pager(<span style=color:#e6db74>&#39;generated.db&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#75715e># read in the schema page</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     schema_page <span style=color:#f92672>=</span> old_db_pager<span style=color:#f92672>.</span>get_page(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     dbinfo <span style=color:#f92672>=</span> DBInfo(schema_page)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     schema_node <span style=color:#f92672>=</span> Node(schema_page, <span style=color:#66d9ef>True</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#75715e># read in the page with the test table</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     data_page <span style=color:#f92672>=</span> old_db_pager<span style=color:#f92672>.</span>get_page(<span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     data_node <span style=color:#f92672>=</span> Node(data_page)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#75715e># serialize the pages</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     new_schema_page <span style=color:#f92672>=</span> dbinfo<span style=color:#f92672>.</span>to_bytes() <span style=color:#f92672>+</span> schema_node<span style=color:#f92672>.</span>to_bytes(dbinfo)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     new_data_page <span style=color:#f92672>=</span> data_node<span style=color:#f92672>.</span>to_bytes(dbinfo)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#75715e># write the pages to the new db</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     new_db_pager<span style=color:#f92672>.</span>write_page(<span style=color:#ae81ff>1</span>, new_schema_page)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     new_db_pager<span style=color:#f92672>.</span>write_page(<span style=color:#ae81ff>2</span>, new_data_page)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     print(<span style=color:#e6db74>&#39;generated.db written&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;__main__&#39;</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>   test_schema_page()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   test_file_end_to_end()
+</span></span></code></pre></div><p>For this to work we need to introduce some new functions that allow us to serialize our database header and nodes:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/dbinfo.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> bytes([])
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> <span style=color:#f92672>from</span> src.dbinfo <span style=color:#f92672>import</span> DBInfo
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.util <span style=color:#f92672>import</span> b2i
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self, dbinfo: DBInfo) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> bytes([])
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span></code></pre></div><p>As well as a function that allows us to use our pager to write file content:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/pager.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>write_page</span>(
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       page_number: int,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       data: bytes,
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   ):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># create the file if it doesn&#39;t exist</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>if</span> <span style=color:#f92672>not</span> os<span style=color:#f92672>.</span>path<span style=color:#f92672>.</span>exists(self<span style=color:#f92672>.</span>file_name):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>with</span> open(self<span style=color:#f92672>.</span>file_name, <span style=color:#e6db74>&#39;w&#39;</span>): <span style=color:#66d9ef>pass</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>with</span> open(self<span style=color:#f92672>.</span>file_name, <span style=color:#e6db74>&#39;rb+&#39;</span>) <span style=color:#66d9ef>as</span> file:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           file<span style=color:#f92672>.</span>seek(self<span style=color:#f92672>.</span>get_offset(page_number))
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           file<span style=color:#f92672>.</span>write(data)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>get_offset</span>(
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span></code></pre></div><p>If we haven&rsquo;t touched the <code>test.db</code> file since we created it last week, then we should be able to read the file generated by the program in the same way:</p><pre tabindex=0><code>➜  sqlite3 test.db
+SQLite version 3.39.5 2022-10-14 20:58:05
+Enter &#34;.help&#34; for usage hints.
+sqlite&gt; select * from test;
+hi|1
+yo|2
+</code></pre><p>Our goal for this post is to do the same with a file &ldquo;generated.db&rdquo; which is written out by our program.</p><p>We can test that our above skeleton works by creating the output file and running our main file once more:</p><pre tabindex=0><code>➜  python3 main.py
+generated.db written
+</code></pre><p>If this works without an error then we can get started serializing the different bits of the database.</p><h1 id=writing-out-the-records-and-cells>Writing out the Records and Cells</h1><p>We&rsquo;ll start by rewriting out the record values. If you recall, Records contain a header which include a varint for the header size as well as varints for each of the column types. We&rsquo;ll start with the column types, by creating a function <code>to_int</code> which turns <code>Column</code> class which we created back into the integer value it came in as.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/record.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Column</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_int</span>(self) <span style=color:#f92672>-&gt;</span> int:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>if</span> self<span style=color:#f92672>.</span>type<span style=color:#f92672>.</span>value <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>12</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>return</span> self<span style=color:#f92672>.</span>type<span style=color:#f92672>.</span>value
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       modifier <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>type<span style=color:#f92672>.</span>value
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> (self<span style=color:#f92672>.</span>length <span style=color:#f92672>*</span> <span style=color:#ae81ff>2</span>) <span style=color:#f92672>+</span> modifier
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span></code></pre></div><p>From here we can add a new <code>to_varint</code> function which takes our integer values and turns them back into varint byte arrays. A first pass of this yeilds us:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/util.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_varint</span>(x: int) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#e6db74>&#34;&#34;&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>+     to_varint takes an integer and turns it into a variable length byte array
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>+ 
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>+     it takes x, an integer
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>+ 
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>+     and returns a varint representation as a byte array
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>+     &#34;&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     result <span style=color:#f92672>=</span> bytearray()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#66d9ef>for</span> j <span style=color:#f92672>in</span> range(<span style=color:#ae81ff>8</span>):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>         byte <span style=color:#f92672>=</span> x <span style=color:#f92672>%</span> <span style=color:#ae81ff>16</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>         x <span style=color:#f92672>=</span> x <span style=color:#f92672>&gt;&gt;</span> <span style=color:#ae81ff>7</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>         <span style=color:#66d9ef>if</span> x <span style=color:#f92672>&gt;</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>             <span style=color:#75715e># add the carry bit if there&#39;s more information</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>             byte <span style=color:#f92672>=</span> byte <span style=color:#f92672>|</span> <span style=color:#ae81ff>0x80</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>         result<span style=color:#f92672>.</span>append(byte)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>         <span style=color:#66d9ef>if</span> x <span style=color:#f92672>&lt;=</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>             <span style=color:#66d9ef>return</span> bytes(result)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span> 
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     byte <span style=color:#f92672>=</span> x <span style=color:#f92672>%</span> <span style=color:#ae81ff>32</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     result<span style=color:#f92672>.</span>append(byte)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>     <span style=color:#66d9ef>return</span> bytes(result)
+</span></span></code></pre></div><p>However there&rsquo;s an issue, running the following test doesn&rsquo;t work:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test.py (not saved in git)</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.util <span style=color:#f92672>import</span> varint, to_varint
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>broken_example <span style=color:#f92672>=</span> bytes([<span style=color:#ae81ff>0x81</span>, <span style=color:#ae81ff>0x91</span>, <span style=color:#ae81ff>0xd1</span>, <span style=color:#ae81ff>0xac</span>, <span style=color:#ae81ff>0x78</span>])
+</span></span><span style=display:flex><span>recomputed <span style=color:#f92672>=</span> to_varint(varint(broken_example, <span style=color:#ae81ff>0</span>)[<span style=color:#ae81ff>0</span>])
+</span></span><span style=display:flex><span>print(broken_example<span style=color:#f92672>.</span>hex(), recomputed<span style=color:#f92672>.</span>hex())
+</span></span><span style=display:flex><span><span style=color:#66d9ef>assert</span> broken_example <span style=color:#f92672>==</span> recomputed
+</span></span></code></pre></div><p>Running the above test we see a failure:</p><pre tabindex=0><code>➜  python3 test.py
+8191d1ac78 888c818101
+Traceback (most recent call last):
+  File &#34;/Users/godzilla/projects/pypopsql/test.py&#34;, line 6, in &lt;module&gt;
+    assert broken_example == recomputed
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+</code></pre><p>Turns out generating varints is a bit more complicated than I had originally expected. I hinged my assumption on being able to simply:</p><pre tabindex=0><code>bytes.append(x % 128)
+x = x &gt;&gt; 7
+</code></pre><p>But this turns out not to be the right approach. For one, the bytes are going to be in the wrong order (smallest left) and for another we&rsquo;re going to be unsure how large the last byte is to be. In this particular case, the last byte we refer to is the last byte read, which will be the first byte written due to how we intend to pull off the bits.</p><p>We can find out if 9 bytes will be needed by checking if any of the first 7 bits of the long are filled. If any of them are filled (1), we will need a full 9 bytes to express the varint and therefore our first byte written will be 8 bits in size.</p><p>This is simple enough to express with an arithmetic or operation: <code>requires_9_bytes = bool(0xfe00000000000000 & x)</code></p><p>We can use this to modify our <code>to_varint</code> implementation to say whether the first byte that needs to be pulled off is to be the 9th byte of our varint. Then we can insert instead of append the bytes in order until the payload is filled.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/util.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_varint</span>(x: int) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#34;&#34;&#34;
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    to_varint takes an integer and turns it into a variable length byte array
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    it takes x, an integer
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    and returns a varint representation as a byte array
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    &#34;&#34;&#34;</span>
+</span></span><span style=display:flex><span>    result <span style=color:#f92672>=</span> bytearray()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    first_7_bits <span style=color:#f92672>=</span> <span style=color:#ae81ff>0xfe00000000000000</span>
+</span></span><span style=display:flex><span>    requires_9_bytes <span style=color:#f92672>=</span> x <span style=color:#f92672>&amp;</span> first_7_bits
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># if any of the first 7 bits are filled, 9 bytes will be needed</span>
+</span></span><span style=display:flex><span>    first_shift_size <span style=color:#f92672>=</span> <span style=color:#ae81ff>8</span> <span style=color:#66d9ef>if</span> requires_9_bytes <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>7</span>
+</span></span><span style=display:flex><span>    first_modulo <span style=color:#f92672>=</span> <span style=color:#ae81ff>256</span> <span style=color:#66d9ef>if</span> requires_9_bytes <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>128</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    result<span style=color:#f92672>.</span>append(x <span style=color:#f92672>%</span> first_modulo)
+</span></span><span style=display:flex><span>    x <span style=color:#f92672>=</span> x <span style=color:#f92672>&gt;&gt;</span> first_shift_size
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>while</span> x <span style=color:#f92672>&gt;</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>        <span style=color:#75715e># pull first 7 bits, flip the first bit to signal carryover</span>
+</span></span><span style=display:flex><span>        byte <span style=color:#f92672>=</span> (x <span style=color:#f92672>%</span> <span style=color:#ae81ff>128</span>) <span style=color:#f92672>|</span> <span style=color:#ae81ff>0x80</span>
+</span></span><span style=display:flex><span>        result<span style=color:#f92672>.</span>insert(<span style=color:#ae81ff>0</span>, byte)
+</span></span><span style=display:flex><span>        x <span style=color:#f92672>=</span> x <span style=color:#f92672>&gt;&gt;</span> <span style=color:#ae81ff>7</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> bytes(result)
+</span></span></code></pre></div><p>Then we can add the following line to our utility test to see if the output of <code>to_varint</code> is the same as what we read for <code>varint</code>:</p><pre tabindex=0><code>     input_data = bytes(test.data)
+     result, cursor = varint(input_data, 0)
+     self.assertEqual(test.expected, result)
+     self.assertEqual(test.cursor, cursor)
++    self.assertEqual(input_data, to_varint(result))
+</code></pre><p>So now we&rsquo;ve put the two things together for generating bytes for the Record header, we&rsquo;ll need to encode the column types as well as the header length. The header length has an interesting little quirk as its own size contributes to its value. This has a unique edge case:</p><p>Per the file format documentation, often the header_size is going to be encoded in a single byte. This is because all numbers 127 and below can be encoded in a single byte, and it&rsquo;s unlikely that a record has so many columns that it needs to communicate a length greater than 127.</p><p>Consider for a moment the unlikely case that a Record has 127 TINYINT columns. Encoding a varint of every number 127 and below only takes a single byte. If we kept the assumption earlier that we would only need a single byte, we could say the whole header would be 128 bytes long because it would be the length of the columns - in addition to the space required to encode the payload size. However when we try to encode the number 128 it ends up in 2 bytes - making the actual header size 129 even though the number encoded is 128.</p><p>For this reason we can place some inherent limits on this operation, saying that all header lengths 126 and below require 1 byte for the length varint, 2 bytes for anything above and if the user tries to encode a header of greater than 32765 we&rsquo;ll throw an error. It&rsquo;s likely impossible that a header of that length is a valid header, especially considering that it&rsquo;s likely a good bit larger than the OS page size.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/record.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Record</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>read_value</span>(
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>header_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       payload <span style=color:#f92672>=</span> bytearray()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>for</span> column <span style=color:#f92672>in</span> self<span style=color:#f92672>.</span>columns:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           payload <span style=color:#f92672>+=</span> column<span style=color:#f92672>.</span>to_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       payload_size <span style=color:#f92672>=</span> len(payload)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>if</span> payload_size <span style=color:#f92672>&gt;</span> <span style=color:#ae81ff>32765</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>raise</span> <span style=color:#a6e22e>Exception</span>(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;unexpected header payload size </span><span style=color:#e6db74>{</span>payload_size<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       expected_varint_length <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span> <span style=color:#66d9ef>if</span> payload_size <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>127</span> <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       header_size_bytes <span style=color:#f92672>=</span> to_varint(payload_size <span style=color:#f92672>+</span> expected_varint_length)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> bytes(header_size_bytes <span style=color:#f92672>+</span> payload)
+</span></span></code></pre></div><p>Once we&rsquo;ve effectively written out the header payload, we can serialize the body in a similar manner to how we deserialized it originally.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/record.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>header_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#a6e22e>@staticmethod</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>value_bytes</span>(column: Column, value: any) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># Note: column types other than NULL, TINYINT, and TEXT are omitted</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>if</span> column<span style=color:#f92672>.</span>type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>NULL:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>return</span> bytes([])
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>elif</span> column<span style=color:#f92672>.</span>type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>TINYINT:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>return</span> value<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>elif</span> column<span style=color:#f92672>.</span>type <span style=color:#f92672>==</span> ColumnType<span style=color:#f92672>.</span>TEXT:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>return</span> bytes(value, <span style=color:#e6db74>&#39;utf-8&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>else</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>raise</span> <span style=color:#a6e22e>Exception</span>(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;cannot parse column type </span><span style=color:#e6db74>{</span>column_type<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>values_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       body <span style=color:#f92672>=</span> bytearray()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>for</span> i, column <span style=color:#f92672>in</span> enumerate(self<span style=color:#f92672>.</span>columns):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           body <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>value_bytes(column, self<span style=color:#f92672>.</span>values[i])
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> bytes(body)
+</span></span></code></pre></div><p>And we can create a function for serializing the entire record payload:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/record.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>values_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        header_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>header_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        values_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>values_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>return</span> header_bytes <span style=color:#f92672>+</span> values_bytes
+</span></span></code></pre></div><p>Now we can add a test which deserializes, and then reserializes the record data. We&rsquo;ll use a simple example which has 3 columns, a TINYINT, an INTEGER and a VARCHAR of length 2:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test/backend/test_record.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_record_read_write_payload</span>(self):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># 4 byte header</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># col 1 - tinyint, 17</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># col 2 - integer, 1114129</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># col 3 - string, &#39;OI&#39;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       payload <span style=color:#f92672>=</span> bytes<span style=color:#f92672>.</span>fromhex(<span style=color:#e6db74>&#39;0401041111001100114f49&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       record <span style=color:#f92672>=</span> Record(payload, <span style=color:#ae81ff>0</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>assertEqual(record<span style=color:#f92672>.</span>to_bytes(), payload)
+</span></span></code></pre></div><p>This test takes an inbound payload, turns it into a record, and then verifies the output of the <code>to_bytes</code> function on the record matches the original payload.</p><p>We can follow on this work by adding a similar and simple <code>to_bytes</code> function to our <code>TableLeafCell</code> class:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/cell.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       payload <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>record<span style=color:#f92672>.</span>to_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       payload_size_bytes <span style=color:#f92672>=</span> to_varint(len(payload))
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       row_id_bytes <span style=color:#f92672>=</span> to_varint(self<span style=color:#f92672>.</span>row_id)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> payload_size_bytes <span style=color:#f92672>+</span> row_id_bytes <span style=color:#f92672>+</span> payload
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>_debug</span>(self):
+</span></span></code></pre></div><p>And we can add a testing class to ensure this behavior works as well:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test/backend/test_cell.py (new file)</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> unittest <span style=color:#f92672>import</span> TestCase
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>from</span> src.backend.cell <span style=color:#f92672>import</span> TableLeafCell
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>TestCell</span>(TestCase):
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_table_leaf_cell</span>(self):
+</span></span><span style=display:flex><span>        data <span style=color:#f92672>=</span> bytes([
+</span></span><span style=display:flex><span>            <span style=color:#ae81ff>0x06</span>, <span style=color:#75715e># payload size</span>
+</span></span><span style=display:flex><span>            <span style=color:#ae81ff>0x02</span>, <span style=color:#75715e># row id</span>
+</span></span><span style=display:flex><span>            <span style=color:#ae81ff>0x03</span>, <span style=color:#ae81ff>0x11</span>, <span style=color:#ae81ff>0x01</span>, <span style=color:#ae81ff>0x79</span>, <span style=color:#ae81ff>0x6f</span>, <span style=color:#ae81ff>0x02</span>, <span style=color:#75715e># payload</span>
+</span></span><span style=display:flex><span>        ])
+</span></span><span style=display:flex><span>        cell <span style=color:#f92672>=</span> TableLeafCell(data, <span style=color:#ae81ff>0</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(cell<span style=color:#f92672>.</span>payload_size, <span style=color:#ae81ff>6</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(cell<span style=color:#f92672>.</span>row_id, <span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(cell<span style=color:#f92672>.</span>payload, data[<span style=color:#ae81ff>2</span>:])
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(cell<span style=color:#f92672>.</span>cursor, <span style=color:#ae81ff>8</span>)
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(cell<span style=color:#f92672>.</span>to_bytes(), data)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;__main__&#39;</span>:
+</span></span><span style=display:flex><span>    unittest<span style=color:#f92672>.</span>main()
+</span></span></code></pre></div><p>where the final assertion <code>self.assertEqual(cell.to_bytes(), data)</code> validates the behavior of turning the cell back into bytes.</p><h1 id=serializing-the-nodes>Serializing the Nodes</h1><p>Building on the work done for the record values, we now can move onto the <code>Node</code> class. As mentioned earlier, the data layout for these will be building from both the left and the right of the page, with the node header and cell pointer array on the left and the cell content on the right.</p><p>Getting this behavior to work requires us to build the cell data from the right to the left while keeping track of the pointers to the cell data so that we can add them to the array on the left. It also requires us to effectively pad the space in the middle so that an appropriate amount of bytes is to be serialized to disk.</p><p>We also need to keep track of the reserved bytes setting that&rsquo;s built into the SQLite engine so that we&rsquo;re compliant with the engine&rsquo;s configuration, as well as shrinking the output to make space for the database header if it&rsquo;s the first page in the database.</p><p>All of this requires a good amount of simple, yet precise arithmetic so we need to be careful with this step as it is likely the most mechanically complex operation we&rsquo;ve dealt with to this point.</p><p>As discussed last week, the node header looks like this in a byte-by-byte level:</p><blockquote><table><thead><tr><th>Offset</th><th>Size</th><th>Description</th></tr></thead><tbody><tr><td>0</td><td>1</td><td>The one-byte flag at offset 0 indicating the b-tree page type.</td></tr><tr><td>1</td><td>2</td><td>The two-byte integer at offset 1 gives the start of the first freeblock on the page, or is zero if there are no freeblocks.</td></tr><tr><td>3</td><td>2</td><td>The two-byte integer at offset 3 gives the number of cells on the page.</td></tr><tr><td>5</td><td>2</td><td>The two-byte integer at offset 5 designates the start of the cell content area. A zero value for this integer is interpreted as 65536.</td></tr><tr><td>7</td><td>1</td><td>The one-byte integer at offset 7 gives the number of fragmented free bytes within the cell content area.</td></tr><tr><td>8</td><td>4</td><td>The four-byte page number at offset 8 is the right-most pointer. This value appears in the header of interior b-tree pages only and is omitted from all other pages.</td></tr></tbody></table></blockquote><p>And the values for the page type byte:</p><blockquote><ul><li>A value of 2 (0x02) means the page is an interior index b-tree page.</li><li>A value of 5 (0x05) means the page is an interior table b-tree page.</li><li>A value of 10 (0x0a) means the page is a leaf index b-tree page.</li><li>A value of 13 (0x0d) means the page is a leaf table b-tree page.</li><li>Any other value for the b-tree page type is an error.</li></ul></blockquote><p>One of the benefits of our approach is that since we&rsquo;re not concerned for speed, and because we deserialize the payload in full into Python objects - we don&rsquo;t need to think about freeblocks and fragmented bytes. If we were thinking more about performance, we may not even turn the byte array into objects, we would simply write helper functions for us to seek, read and write values from the byte array in place. Since we&rsquo;re not doing this, we can pack the cells tightly together in the page, which gives us the benefit of simplicity at the expense of execution speed.</p><p>Something to note before we get started however is that we won&rsquo;t have the starting location of the cell content until we serialize the cell, so for now we&rsquo;ll leave that blank. We can do this by adding a <code>header_bytes</code> function to the Node like we did for the Record:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>header_bytes</span>(self, cell_offset: int<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       node_type_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>node_type<span style=color:#f92672>.</span>value<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       first_freeblock_bytes <span style=color:#f92672>=</span> (<span style=color:#ae81ff>0</span>)<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       num_cells_bytes <span style=color:#f92672>=</span> len(self<span style=color:#f92672>.</span>cells)<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       cell_offset_bytes <span style=color:#f92672>=</span> (cell_offset)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       num_fragmented_bytes <span style=color:#f92672>=</span> (<span style=color:#ae81ff>0</span>)<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> node_type_bytes <span style=color:#f92672>+</span> \
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>              first_freeblock_bytes <span style=color:#f92672>+</span> \
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>              num_cells_bytes <span style=color:#f92672>+</span> \
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>              cell_offset_bytes <span style=color:#f92672>+</span> \
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>              num_fragmented_bytes
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span></code></pre></div><p>If we want, we can modify our table leaf node test to verify this behavior:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test/backend/node.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_table_leaf_parse</span>(self):
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(node<span style=color:#f92672>.</span>cells[<span style=color:#ae81ff>1</span>]<span style=color:#f92672>.</span>cursor, <span style=color:#ae81ff>25</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       header_bytes <span style=color:#f92672>=</span> data[:<span style=color:#ae81ff>8</span>]
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>assertEquals(header_bytes, node<span style=color:#f92672>.</span>header_bytes(<span style=color:#ae81ff>17</span>))
+</span></span></code></pre></div><p>From here we can add another function <code>cells_bytes</code> which will give us:</p><ul><li>A section of bytes which corresponds to the 2-byte cell pointer list</li><li>A section of bytes corresponding to the cell content block</li><li>The integer location of the start of the cell content area (used in the header)</li></ul><p>We have some creative direction here as well. Since the format doesn&rsquo;t specify which order the cell content needs to be in, we could either have the cell content left to right like:</p><pre tabindex=0><code>[node header, cell pointer 1, cell pointer 2, .... cell content 1, cell content 2]
+</code></pre><p>Or in the reverse, right to left like:</p><pre tabindex=0><code>[node header, cell pointer 1, cell pointer 2, .... cell content 2*, cell content 1*]
+</code></pre><p>The latter option is easier, as it allows us to calculate the offsets in the order that the cell pointers appear. Additionally this is the approach taken by SQLite in our test.db file, so it allows us to be consistent with the engine&rsquo;s behavior. We can generate these values with the following code:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>cells_bytes</span>(self) <span style=color:#f92672>-&gt;</span> Tuple[
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       bytes, <span style=color:#75715e># cell pointer bytes</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       bytes, <span style=color:#75715e># cell content bytes</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       int, <span style=color:#75715e># cell content start pointer</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   ]:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       cell_pointer_bytes <span style=color:#f92672>=</span> bytes([])
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       cell_content_bytes <span style=color:#f92672>=</span> bytes([])
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       pointer <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>page_size
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>for</span> cell <span style=color:#f92672>in</span> self<span style=color:#f92672>.</span>cells:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           content_bytes <span style=color:#f92672>=</span> cell<span style=color:#f92672>.</span>to_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           pointer <span style=color:#f92672>=</span> pointer <span style=color:#f92672>-</span> len(content_bytes)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           pointer_bytes <span style=color:#f92672>=</span> pointer<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           cell_pointer_bytes <span style=color:#f92672>+=</span> pointer_bytes
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#75715e># cell content grows leftward</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           cell_content_bytes <span style=color:#f92672>=</span> content_bytes <span style=color:#f92672>+</span> cell_content_bytes
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (cell_pointer_bytes, cell_content_bytes, pointer)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self, dbinfo: DBInfo) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span></code></pre></div><p>Note how the we calculate the pointer locations, which move leftward as we serialize each cell. Reasoning about this, consider the following example of theoretical 32 byte page with two cells:</p><pre tabindex=0><code>cell 1 - length 3
+cell 2 - length 4
+
+[0, 1, 2, ... 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+                               |               ↳ start cell 1
+                               ↳ start cell 2
+</code></pre><p>We&rsquo;re aiming for cell 1 to start at 29, occupying bytes 29, 30, and 31 and for cell 2 to start at 25, occupying bytes 25, 26, 27, and 28. Using the code above, the pointer starts at 32. When we serialize cell 1, we calculate its pointer to be <code>32 - 3 = 29</code>; the location we were aiming for and when we serialize cell 2, we calculate its pointer to be <code>29 - 4 = 25</code>; also what we were aiming for. When the function exits, it returns 25 as the cell content start location - which is also the value we are targeting.</p><p>We don&rsquo;t yet protect for the cell content overflowing the page, nor do we pad the page with reserved bytes as specified in the DBInfo file, but that&rsquo;s something we&rsquo;ll get into after we are able to write out the database header. For now we can finish our first pass at our <code>to_bytes</code> function on the Node.</p><p>There&rsquo;s one more bit of arithmetic to perform on this section and this is to calculate the number of null bytes between the cell pointer array and the cell content block. We need to take into account the following information:</p><ul><li>The page size of the node</li><li>The size of the database header</li><li>The size of the node header</li><li>The size of the cell pointer array</li><li>The size of the cell content block</li></ul><p>We also will need to account for the reserved bytes when we are able to account for the database configuration, but we can factor that logic into the size of the cell content block to simplify this operation. The <code>to_bytes</code> function will serialize the cell content and pointers, serialize the node header, calculate and create the null byte space in the middle, and return those items formatted in a contiguous block. The output should be the size of a database page, so if it&rsquo;s not we can also halt and notify ourselves if it&rsquo;s not.</p><p>Visualizing the layout using the above example, we can imagine that bytes 0-7 will be occupied by the header, bytes 9-11 are occupied by the cell pointer array, and bytes 25-31 are occupied by the cell content block.</p><pre tabindex=0><code>[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+ | ------------------ | cell header
+                         | -------- | cell pointer array                  
+                                                                        cell content block | --------------------- |
+                                       | ---------------------------------------------- | free space
+</code></pre><p>Which means that cells 12 to 24 should be empty space, which totals 13 bytes. Using the equation <code>page size - (header size + pointer array size + content block size)</code> works out to <code>32 - (8 + 4 + 7) = 13</code> which will be an effective calculation for the number of bytes of empty space. We now give a first pass to the <code>to_bytes</code> function, which you can see below:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self, dbinfo: DBInfo) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       db_header_len <span style=color:#f92672>=</span> <span style=color:#ae81ff>100</span> <span style=color:#66d9ef>if</span> self<span style=color:#f92672>.</span>has_db_header <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       cell_pointer_bytes, cell_content_bytes, cell_content_start <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>cells_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       header_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>header_bytes(cell_content_start)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       total_content_len <span style=color:#f92672>=</span> db_header_len <span style=color:#f92672>+</span> len(header_bytes) <span style=color:#f92672>+</span> len(cell_pointer_bytes) <span style=color:#f92672>+</span> len(cell_content_bytes)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       num_null_bytes <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>page_size <span style=color:#f92672>-</span> total_content_len
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>if</span> num_null_bytes <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>           <span style=color:#66d9ef>raise</span> <span style=color:#a6e22e>ValueError</span>(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#39;node page overflows by </span><span style=color:#e6db74>{</span>abs(num_null_bytes)<span style=color:#e6db74>}</span><span style=color:#e6db74> bytes&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       null_bytes <span style=color:#f92672>=</span> bytes([<span style=color:#ae81ff>0x00</span>] <span style=color:#f92672>*</span> num_null_bytes)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#66d9ef>return</span> header_bytes <span style=color:#f92672>+</span> cell_pointer_bytes <span style=color:#f92672>+</span> null_bytes <span style=color:#f92672>+</span> cell_content_bytes
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>       <span style=color:#66d9ef>return</span> bytes([])
+</span></span></code></pre></div><p>And use our existing test to verify its behavior:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test/backend/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(header_bytes, node<span style=color:#f92672>.</span>header_bytes(<span style=color:#ae81ff>17</span>))
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>assertEqual(data, node<span style=color:#f92672>.</span>to_bytes(get_simple_dbinfo()))
+</span></span></code></pre></div><p>If we did everything right this test should still pass. We&rsquo;ve taken the first step for serializing full database pages, now we can move onto the database header.</p><h1 id=serializing-the-database-header-and-schema-page>Serializing the database header and schema page</h1><p>The database header should be simple enough, we just reserialize the bytes in the way that we found them. If they changed along the way we reflect those changes in our output. We can nearly copy the order that we found in the DBInfo constructor, and the only piece that requires more than serializing integers to bytes will be the version. One additional step will be required however in that we will need to manually place the 20 bytes of reserved space between indicies 72 and 92.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/dbinfo.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;SQLite format 3</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#39;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>page_size<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>2</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>file_format_write_version<span style=color:#f92672>.</span>value<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>file_format_read_version<span style=color:#f92672>.</span>value<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>page_end_reserved_space<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>maximum_embedded_payload_fraction<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>minimum_embedded_payload_fraction<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>leaf_payload_fraction<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>1</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>file_change_counter<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>db_size_in_pages<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>first_freelist_trunk_page<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>num_freelist_pages<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>schema_cookie<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>schema_format_number<span style=color:#f92672>.</span>value<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>default_page_cache_size<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>largest_btree_root_page<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>text_encoding<span style=color:#f92672>.</span>value<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>user_version<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>incremental_vacuum_mode<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>application_id<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#75715e># reserved expansion space</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> bytes([<span style=color:#ae81ff>0x00</span>] <span style=color:#f92672>*</span> <span style=color:#ae81ff>20</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>version_valid_for<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        data <span style=color:#f92672>+=</span> self<span style=color:#f92672>.</span>version<span style=color:#f92672>.</span>to_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        <span style=color:#66d9ef>return</span> data
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>        <span style=color:#66d9ef>return</span> bytes([])
+</span></span></code></pre></div><p>We can then add the corresponding function for serializing the version:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/dbinfo.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Version</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_int</span>(self) <span style=color:#f92672>-&gt;</span> int:
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (self<span style=color:#f92672>.</span>major <span style=color:#f92672>*</span> <span style=color:#ae81ff>1000000</span>) <span style=color:#f92672>+</span> \
+</span></span><span style=display:flex><span>               (self<span style=color:#f92672>.</span>minor <span style=color:#f92672>*</span> <span style=color:#ae81ff>1000</span>) <span style=color:#f92672>+</span> \
+</span></span><span style=display:flex><span>               self<span style=color:#f92672>.</span>patch
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> self<span style=color:#f92672>.</span>to_int()<span style=color:#f92672>.</span>to_bytes(<span style=color:#ae81ff>4</span>)
+</span></span></code></pre></div><p>And now that we have the serialization fully wired up for the DBInfo we can add a new test to ensure the system is working end to end.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test/test_dbinfo.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_dbinfo_to_bytes</span>(self):
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       dbinfo <span style=color:#f92672>=</span> DBInfo(EXAMPLE_DBINFO_BYTES)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       <span style=color:#75715e># test first hundred bytes</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>assertEqual(EXAMPLE_DBINFO_BYTES[:<span style=color:#ae81ff>100</span>], dbinfo<span style=color:#f92672>.</span>to_bytes())
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;__main__&#39;</span>:
+</span></span></code></pre></div><p>There&rsquo;s one last thing to do before we&rsquo;re able to serialize the inbound <code>test.db</code> file. SQLite right pads the database pages - of which when I created a db from scratch the setting was 12 bytes. Per the docs this information is included in the header:</p><p><code>20 1 Bytes of unused "reserved" space at the end of each page. Usually 0.</code></p><p>We need to use this information from the header to do two things:</p><ul><li>Modify the starting offset for the cell content area</li><li>Add additional padded bytes when we serialize a node</li></ul><p>Let&rsquo;s start by modifying our <code>cells_bytes</code> function to add this behavior:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># src/backend/node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>cells_bytes</span>(self) <span style=color:#f92672>-&gt;</span> Tuple[<span style=color:#f92672>...</span>]:
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>   <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>cells_bytes</span>(self, reserved_bytes<span style=color:#f92672>=</span><span style=color:#ae81ff>0</span>) <span style=color:#f92672>-&gt;</span> Tuple[<span style=color:#f92672>...</span>]:
+</span></span><span style=display:flex><span>        cell_pointer_bytes <span style=color:#f92672>=</span> bytes([])
+</span></span><span style=display:flex><span>        cell_content_bytes <span style=color:#f92672>=</span> bytes([])
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>       pointer <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>page_size
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       pointer <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>page_size <span style=color:#f92672>-</span> reserved_bytes
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> cell <span style=color:#f92672>in</span> self<span style=color:#f92672>.</span>cells:
+</span></span><span style=display:flex><span>            <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       cell_content_bytes <span style=color:#f92672>+=</span> bytes([<span style=color:#ae81ff>0x00</span>] <span style=color:#f92672>*</span> reserved_bytes)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (cell_pointer_bytes, cell_content_bytes, pointer)
+</span></span></code></pre></div><p>And then we can use the <code>dbinfo</code> parameter from <code>to_bytes</code> to pass this information in:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>to_bytes</span>(self, dbinfo: DBInfo) <span style=color:#f92672>-&gt;</span> bytes:
+</span></span><span style=display:flex><span>        db_header_len <span style=color:#f92672>=</span> <span style=color:#ae81ff>100</span> <span style=color:#66d9ef>if</span> self<span style=color:#f92672>.</span>has_db_header <span style=color:#66d9ef>else</span> <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>-</span>        cell_pointer_bytes, cell_content_bytes, cell_content_start <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>cells_bytes()
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>        cell_pointer_bytes, cell_content_bytes, cell_content_start <span style=color:#f92672>=</span> self<span style=color:#f92672>.</span>cells_bytes(dbinfo<span style=color:#f92672>.</span>page_end_reserved_space)
+</span></span></code></pre></div><p>Now we can test that the schema page is being serialized properly - header and all:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#75715e># test/backend/test_node.py</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>def</span> <span style=color:#a6e22e>test_schema_header_page</span>(self):
+</span></span><span style=display:flex><span>        <span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>        self<span style=color:#f92672>.</span>assertEqual(cell<span style=color:#f92672>.</span>record<span style=color:#f92672>.</span>cursor, <span style=color:#ae81ff>4084</span>)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       serialized_page <span style=color:#f92672>=</span> dbinfo<span style=color:#f92672>.</span>to_bytes() <span style=color:#f92672>+</span> node<span style=color:#f92672>.</span>to_bytes(dbinfo)
+</span></span><span style=display:flex><span><span style=color:#f92672>+</span>       self<span style=color:#f92672>.</span>assertEqual(data, serialized_page)
+</span></span></code></pre></div><p>And finally, we can try to read our <code>test.db</code> file and create a <code>generated.db</code> file which hopefully SQLite can read:</p><pre tabindex=0><code>➜  python3 main.py
+generated.db written
+
+➜  sqlite3 generated.db
+SQLite version 3.39.5 2022-10-14 20:58:05
+Enter &#34;.help&#34; for usage hints.
+
+sqlite&gt; .tables
+test
+
+sqlite&gt; select * from test;
+hi|1
+yo|2
+</code></pre><p>And just like that we&rsquo;ve fully a fully valid SQLite database with one user table from scratch! Moving forward we&rsquo;re going to continue working with the database nodes. There&rsquo;s a lot to tackle, like inserting and deleting rows, adding indexes and growing beyond a single database page. We can also going to try to see what happens when we add columns to existing tables and try to see if we can overflow nodes. Once we&rsquo;ve painted over a lot of the backend parts of the system, we should be able to move onto the database engine and compiler.</p></div><div id=links><a href=https://abudlightlime.com/posts/20230805-popsql-1-reading-db-pages/>&#171;&nbsp;popSQL part 1: reading the sqlite database file</a></div></section></body></html>
