@@ -7,7 +7,7 @@ categories: ["software"]
 
 # Writing out what we read
 
-The next part of this exercise is going to be writing back out the database files we read in. Hopefully by the end of the exercise we should be able to run our new main function:
+The next part of this exercise is going to be writing back out the database files we read in. Hopefully by the end of the exercise we should be able to run this new function in our main file:
 
 ```python
 # main.py
@@ -17,23 +17,25 @@ The next part of this exercise is going to be writing back out the database file
 +     # create the pagers for both the old and new dbs
 +     old_db_pager = Pager('test.db')
 +     new_db_pager = Pager('generated.db')
-+ 
++
 +     # read in the schema page
 +     schema_page = old_db_pager.get_page(1)
 +     dbinfo = DBInfo(schema_page)
 +     schema_node = Node(schema_page, True)
-+ 
++
 +     # read in the page with the test table
 +     data_page = old_db_pager.get_page(2)
 +     data_node = Node(data_page)
-+ 
++
 +     # serialize the pages
 +     new_schema_page = dbinfo.to_bytes() + schema_node.to_bytes(dbinfo)
 +     new_data_page = data_node.to_bytes(dbinfo)
-+ 
++
 +     # write the pages to the new db
 +     new_db_pager.write_page(1, new_schema_page)
 +     new_db_pager.write_page(2, new_data_page)
++
++     print('generated.db written')
 
 if __name__ == '__main__':
 -   test_schema_page()
@@ -54,7 +56,7 @@ For this to work we need to introduce some new functions that allow us to serial
 ```python
 # src/backend/node.py
 ...
-+from src.dbinfo import DBInfo
++ from src.dbinfo import DBInfo
 from src.util import b2i
 ...
 
@@ -74,6 +76,10 @@ As well as a function that allows us to use our pager to write file content:
 +       page_number: int,
 +       data: bytes,
 +   ):
++       # create the file if it doesn't exist
++       if not os.path.exists(self.file_name):
++           with open(self.file_name, 'w'): pass
++
 +       with open(self.file_name, 'rb+') as file:
 +           file.seek(self.get_offset(page_number))
 +           file.write(data)
@@ -97,8 +103,8 @@ Our goal for this post is to do the same with a file "generated.db" which is wri
 We can test that our above skeleton works by creating the output file and running our main file once more:
 
 ```
-➜  touch generated.db
 ➜  python3 main.py
+generated.db written
 ```
 
 If this works without an error then we can get started serializing the different bits of the database.
@@ -112,13 +118,14 @@ We'll start by rewriting out the record values. If you recall, Records contain a
 ...
 
 class Column
-    def to_int(self) -> int:
-        if self.type.value < 12:
-            return self.type.value
-
-        modifier = self.type.value
-        return (self.length * 2) + modifier
-
+...
++   def to_int(self) -> int:
++       if self.type.value < 12:
++           return self.type.value
++
++       modifier = self.type.value
++       return (self.length * 2) + modifier
++
 ```
 
 From here we can add a new `to_varint` function which takes our integer values and turns them back into varint byte arrays. A first pass of this yeilds us:
@@ -126,32 +133,32 @@ From here we can add a new `to_varint` function which takes our integer values a
 ```python
 # src/util.py
 ...
-def to_varint(x: int) -> bytes:
-    """
-    to_varint takes an integer and turns it into a variable length byte array
-
-    it takes x, an integer
-
-    and returns a varint representation as a byte array
-    """
-
-    result = bytearray()
-    for j in range(8):
-        byte = x % 16
-        x = x >> 7
-
-        if x > 0:
-            # add the carry bit if there's more information
-            byte = byte | 0x80
-
-        result.append(byte)
-
-        if x <= 0:
-            return bytes(result)
-
-    byte = x % 32
-    result.append(byte)
-    return bytes(result)
++ def to_varint(x: int) -> bytes:
++     """
++     to_varint takes an integer and turns it into a variable length byte array
++ 
++     it takes x, an integer
++ 
++     and returns a varint representation as a byte array
++     """
++ 
++     result = bytearray()
++     for j in range(8):
++         byte = x % 16
++         x = x >> 7
++ 
++         if x > 0:
++             # add the carry bit if there's more information
++             byte = byte | 0x80
++ 
++         result.append(byte)
++ 
++         if x <= 0:
++             return bytes(result)
++ 
++     byte = x % 32
++     result.append(byte)
++     return bytes(result)
 ```
 
 However there's an issue, running the following test doesn't work:
@@ -188,7 +195,7 @@ x = x >> 7
 
 But this turns out not to be the right approach. For one, the bytes are going to be in the wrong order (smallest left) and for another we're going to be unsure how large the last byte is to be. In this particular case, the last byte we refer to is the last byte read, which will be the first byte written due to how we intend to pull off the bits.
 
-We can find out if 9 bytes will be needed by seeimg if any of the first 7 bits of the long are filled. If any of them are filled (1), we will need a full 9 bytes to express the varint and therefore our first byte written will be 8 bits in size.
+We can find out if 9 bytes will be needed by checking if any of the first 7 bits of the long are filled. If any of them are filled (1), we will need a full 9 bytes to express the varint and therefore our first byte written will be 8 bits in size.
 
 This is simple enough to express with an arithmetic or operation: `requires_9_bytes = bool(0xfe00000000000000 & x)`
 
@@ -234,16 +241,16 @@ Then we can add the following line to our utility test to see if the output of `
      result, cursor = varint(input_data, 0)
      self.assertEqual(test.expected, result)
      self.assertEqual(test.cursor, cursor)
-+    self.assertEqual(input_data.hex(), to_varint(result).hex())
++    self.assertEqual(input_data, to_varint(result))
 ```
 
-So no we've put the two things together for generating bytes for the Record header, we'll need to encode the column types as well as the header length. The header length has an interesting little quirk as its own size contributes to its value. This has a unique edge case:
+So now we've put the two things together for generating bytes for the Record header, we'll need to encode the column types as well as the header length. The header length has an interesting little quirk as its own size contributes to its value. This has a unique edge case:
 
 Per the file format documentation, often the header_size is going to be encoded in a single byte. This is because all numbers 127 and below can be encoded in a single byte, and it's unlikely that a record has so many columns that it needs to communicate a length greater than 127.
 
 Consider for a moment the unlikely case that a Record has 127 TINYINT columns. Encoding a varint of every number 127 and below only takes a single byte. If we kept the assumption earlier that we would only need a single byte, we could say the whole header would be 128 bytes long because it would be the length of the columns - in addition to the space required to encode the payload size. However when we try to encode the number 128 it ends up in 2 bytes - making the actual header size 129 even though the number encoded is 128.
 
-For this reason I'll special case the number 127 as the only possible length for column information in which we'd override the modifier. Because the next number where this happens is 32,766; a number extremely unlikely to occur - I'll simply set an error case on numbers that enter that realm:
+For this reason we can place some inherent limits on this operation, saying that all header lengths 126 and below require 1 byte for the length varint, 2 bytes for anything above and if the user tries to encode a header of greater than 32765 we'll throw an error. It's likely impossible that a header of that length is a valid header, especially considering that it's likely a good bit larger than the OS page size.
 
 ```python
 # src/backend/record.py
@@ -261,10 +268,10 @@ class Record
 +           payload += column.to_bytes()
 +
 +       payload_size = len(payload)
-+       if payload_size > 32767:
++       if payload_size > 32765:
 +           raise Exception(f'unexpected header payload size {payload_size}')
 +
-+       expected_varint_length = 1 if payload_size < 128 else 2
++       expected_varint_length = 1 if payload_size < 127 else 2
 +       header_size_bytes = to_varint(payload_size + expected_varint_length)
 +       return bytes(header_size_bytes + payload)
 ```
@@ -345,10 +352,10 @@ We can follow on this work by adding a similar and simple `to_bytes` function to
     def _debug(self):
 ```
 
-And we can add a testing class to ensure this behavior works as well.
+And we can add a testing class to ensure this behavior works as well:
 
 ```python
-# test/backend/test_cell.py
+# test/backend/test_cell.py (new file)
 
 from unittest import TestCase
 
@@ -372,19 +379,19 @@ if __name__ == '__main__':
     unittest.main()
 ```
 
-Where the final assertion `self.assertEqual(cell.to_bytes(), data)` validates the behavior of turning the cell back into bytes.
+where the final assertion `self.assertEqual(cell.to_bytes(), data)` validates the behavior of turning the cell back into bytes.
 
 # Serializing the Nodes
 
-Building on the work done for the record values, we now can move onto the TableLeafNodes. As mentioned earlier, the data layout for these will be building from both the left and the right of the page, with the node header on the left and the cell payload on the right.
+Building on the work done for the record values, we now can move onto the `Node` class. As mentioned earlier, the data layout for these will be building from both the left and the right of the page, with the node header and cell pointer array on the left and the cell content on the right.
 
-Getting this behavior to work requires us to build the cell data from the right to the left while keeping track of the pointers to the cell data so that we can add them to the right. It also requires us to effectively pad the space in the middle so that an appropriate amount of bytes is to be serialized to disk.
+Getting this behavior to work requires us to build the cell data from the right to the left while keeping track of the pointers to the cell data so that we can add them to the array on the left. It also requires us to effectively pad the space in the middle so that an appropriate amount of bytes is to be serialized to disk.
 
-We also need to keep track of the page padding that's built into the SQLite engine so that we're compliant with the engine's configuration.
+We also need to keep track of the reserved bytes setting that's built into the SQLite engine so that we're compliant with the engine's configuration, as well as shrinking the output to make space for the database header if it's the first page in the database.
 
-All of this requires a good amount of simple, yet precise arithmetic so we need to be careful with this step as it is probably mechanically the most complex step we've dealt with.
+All of this requires a good amount of simple, yet precise arithmetic so we need to be careful with this step as it is likely the most mechanically complex operation we've dealt with to this point.
 
-<note about the header>. As discussed last week, the header looks like this in a byte-by-byte level:
+As discussed last week, the node header looks like this in a byte-by-byte level:
 
 > | Offset | Size | Description |
 > | ------ | ---- | ----------- |
@@ -402,23 +409,25 @@ And the values for the page type byte:
 > * A value of 13 (0x0d) means the page is a leaf table b-tree page.
 > * Any other value for the b-tree page type is an error.
 
-One of the benefits of our approach is that since we're not concerned for speed, and because we deserialize the payload in full into Python objects - we don't need to think about freeblocks and fragmented bytes. We pack the cells tightly together in the page, which gives us the benefit of simplicity at the expense of performance. Something to note before we get started however is that we won't have the starting location of the cell content until we serialize the cell, so for now we'll leave that blank. We can do this by adding a `header_bytes` function to the Node like we did for the Record:
+One of the benefits of our approach is that since we're not concerned for speed, and because we deserialize the payload in full into Python objects - we don't need to think about freeblocks and fragmented bytes. If we were thinking more about performance, we may not even turn the byte array into objects, we would simply write helper functions for us to seek, read and write values from the byte array in place. Since we're not doing this, we can pack the cells tightly together in the page, which gives us the benefit of simplicity at the expense of execution speed.
+
+Something to note before we get started however is that we won't have the starting location of the cell content until we serialize the cell, so for now we'll leave that blank. We can do this by adding a `header_bytes` function to the Node like we did for the Record:
 
 ```python
 # src/backend/node.py
-
-    def header_bytes(self, cell_offset: int=0) -> bytes:
-        node_type_bytes = self.node_type.value.to_bytes(1)
-        first_freeblock_bytes = (0).to_bytes(2)
-        num_cells_bytes = len(self.cells).to_bytes(2)
-        cell_offset_bytes = (cell_offset)
-        num_fragmented_bytes = (0).to_bytes(1)
-
-        return node_type_bytes + \
-               first_freeblock_bytes + \
-               num_cells_bytes + \
-               cell_offset_bytes + \
-               num_fragmented_bytes
+...
++   def header_bytes(self, cell_offset: int=0) -> bytes:
++       node_type_bytes = self.node_type.value.to_bytes(1)
++       first_freeblock_bytes = (0).to_bytes(2)
++       num_cells_bytes = len(self.cells).to_bytes(2)
++       cell_offset_bytes = (cell_offset)
++       num_fragmented_bytes = (0).to_bytes(1)
++
++       return node_type_bytes + \
++              first_freeblock_bytes + \
++              num_cells_bytes + \
++              cell_offset_bytes + \
++              num_fragmented_bytes
 
     def to_bytes(self) -> bytes:
 ...
@@ -452,7 +461,7 @@ We have some creative direction here as well. Since the format doesn't specify w
 Or in the reverse, right to left like:
 
 ```
-[node header, cell pointer 1, cell pointer 2, .... cell content 2, cell content 1]
+[node header, cell pointer 1, cell pointer 2, .... cell content 2*, cell content 1*]
 ```
 
 The latter option is easier, as it allows us to calculate the offsets in the order that the cell pointers appear. Additionally this is the approach taken by SQLite in our test.db file, so it allows us to be consistent with the engine's behavior. We can generate these values with the following code:
@@ -475,7 +484,8 @@ The latter option is easier, as it allows us to calculate the offsets in the ord
 +           pointer_bytes = pointer.to_bytes(2)
 +
 +           cell_pointer_bytes += pointer_bytes
-+           cell_content_bytes = content_bytes + cell_content_bytes # content grows leftward
++           # cell content grows leftward
++           cell_content_bytes = content_bytes + cell_content_bytes
 
         return (cell_pointer_bytes, cell_content_bytes, pointer)
 
@@ -488,10 +498,12 @@ Note how the we calculate the pointer locations, which move leftward as we seria
 cell 1 - length 3
 cell 2 - length 4
 
-[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+[0, 1, 2, ... 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+                               |               ↳ start cell 1
+                               ↳ start cell 2
 ```
 
-We're aiming for cell 1 to start at 29, occupying bytes 29, 30, and 31 and for cell 2 to start at 25, occupying bytes 25, 26, 27, and 28. Using the code above, the pointer starts at 32. When we serialize cell 1, we calculate its pointer to be 32 - 3, which is 29; the location we were aiming for and when we serialize cell 2, we calculate its pointer to be 29 - 4, which is 25; also what we were aiming for. When the function exits, it returns 25 as the cell content start location - which is also the value we are targeting.
+We're aiming for cell 1 to start at 29, occupying bytes 29, 30, and 31 and for cell 2 to start at 25, occupying bytes 25, 26, 27, and 28. Using the code above, the pointer starts at 32. When we serialize cell 1, we calculate its pointer to be `32 - 3 = 29`; the location we were aiming for and when we serialize cell 2, we calculate its pointer to be `29 - 4 = 25`; also what we were aiming for. When the function exits, it returns 25 as the cell content start location - which is also the value we are targeting.
 
 We don't yet protect for the cell content overflowing the page, nor do we pad the page with reserved bytes as specified in the DBInfo file, but that's something we'll get into after we are able to write out the database header. For now we can finish our first pass at our `to_bytes` function on the Node.
 
@@ -502,7 +514,7 @@ There's one more bit of arithmetic to perform on this section and this is to cal
  - The size of the cell pointer array
  - The size of the cell content block
 
-We also will need to account for the reserved bytes when we are able to account for the database configuration, but for now this should give us plenty to think about. The `to_bytes` function will serialize the cell content and pointers, serialize the node header, calculate and create the null byte space in the middle, and return those items formatted in a contiguous block. The output should be the size of a database page, so if it's not we can also halt and notify ourselves if it's not.
+We also will need to account for the reserved bytes when we are able to account for the database configuration, but we can factor that logic into the size of the cell content block to simplify this operation. The `to_bytes` function will serialize the cell content and pointers, serialize the node header, calculate and create the null byte space in the middle, and return those items formatted in a contiguous block. The output should be the size of a database page, so if it's not we can also halt and notify ourselves if it's not.
 
 Visualizing the layout using the above example, we can imagine that bytes 0-7 will be occupied by the header, bytes 9-11 are occupied by the cell pointer array, and bytes 25-31 are occupied by the cell content block.
 
@@ -514,7 +526,7 @@ Visualizing the layout using the above example, we can imagine that bytes 0-7 wi
                                        | ---------------------------------------------- | free space
 ```
 
-Which means that cells 12 - 24 should be empty space, which totals 13 bytes. Using the equation `page size - (header size + pointer array size + content block size)` works out to `32 - (8 + 4 + 7) = 13` which will be an effective calculation for the number of bytes of empty space. We can write out our function below:
+Which means that cells 12 to 24 should be empty space, which totals 13 bytes. Using the equation `page size - (header size + pointer array size + content block size)` works out to `32 - (8 + 4 + 7) = 13` which will be an effective calculation for the number of bytes of empty space. We now give a first pass to the `to_bytes` function, which you can see below:
 
 ```python
 # src/backend/node.py
@@ -545,14 +557,14 @@ And use our existing test to verify its behavior:
 # test/backend/node.py
 ...
         self.assertEqual(header_bytes, node.header_bytes(17))
-+       self.assertEqual(data, node.to_bytes(None))
++       self.assertEqual(data, node.to_bytes(get_simple_dbinfo()))
 ```
 
 If we did everything right this test should still pass. We've taken the first step for serializing full database pages, now we can move onto the database header.
 
 # Serializing the database header and schema page
 
-The database header should be simple enough, we just reserialize the bytes in the way that we found them. If they changed along the way we reflect those changes in our output. We can nearly copy the order that we found in the DBInfo constructor, with the exception of the version number. The only difference will be that we need to manually place in the 20 bytes of reserved space between indicies 72 and 92.
+The database header should be simple enough, we just reserialize the bytes in the way that we found them. If they changed along the way we reflect those changes in our output. We can nearly copy the order that we found in the DBInfo constructor, and the only piece that requires more than serializing integers to bytes will be the version. One additional step will be required however in that we will need to manually place the 20 bytes of reserved space between indicies 72 and 92.
 
 ```python
 # src/dbinfo.py
@@ -626,7 +638,7 @@ And now that we have the serialization fully wired up for the DBInfo we can add 
 if __name__ == '__main__':
 ```
 
-There's one last thing to do before we're able to serialize the inbound `test.db` file. SQLite right pads the database pages - of which the setting when I created a db from scratch was 12 bytes of padding. Per the docs this information is included in the header:
+There's one last thing to do before we're able to serialize the inbound `test.db` file. SQLite right pads the database pages - of which when I created a db from scratch the setting was 12 bytes. Per the docs this information is included in the header:
 
 ```20   1   Bytes of unused "reserved" space at the end of each page. Usually 0.```
 
@@ -664,9 +676,9 @@ And then we can use the `dbinfo` parameter from `to_bytes` to pass this informat
 +        cell_pointer_bytes, cell_content_bytes, cell_content_start = self.cells_bytes(dbinfo.page_end_reserved_space)
 ```
 
-Finally, we can test that the schema page is being serialized properly - header and all:
+Now we can test that the schema page is being serialized properly - header and all:
 
-```
+```python
 # test/backend/test_node.py
 ...
     def test_schema_header_page(self):
@@ -679,12 +691,13 @@ Finally, we can test that the schema page is being serialized properly - header 
 And finally, we can try to read our `test.db` file and create a `generated.db` file which hopefully SQLite can read:
 
 ```
-➜  touch generated.db
 ➜  python3 main.py
-➜  sqlite3 generated.db
+generated.db written
 
+➜  sqlite3 generated.db
 SQLite version 3.39.5 2022-10-14 20:58:05
 Enter ".help" for usage hints.
+
 sqlite> .tables
 test
 
@@ -693,5 +706,5 @@ hi|1
 yo|2
 ```
 
-And just like that we've fully a fully valid SQLite database with one user table from scratch.
+And just like that we've fully a fully valid SQLite database with one user table from scratch! Moving forward we're going to continue working with the database nodes. There's a lot to tackle, like inserting and deleting rows, adding indexes and growing beyond a single database page. We can also going to try to see what happens when we add columns to existing tables and try to see if we can overflow nodes. Once we've painted over a lot of the backend parts of the system, we should be able to move onto the database engine and compiler.
 
