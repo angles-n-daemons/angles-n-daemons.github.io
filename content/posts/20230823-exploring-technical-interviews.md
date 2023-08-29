@@ -8,7 +8,7 @@ categories: ["management"]
 Time spent
 8/23 - 45m
 8/24 - 40m
-8/25 - read the wired article
+8/25 - 30m read wired article and study
 
 Research:
 Read 5 articles on types of technical interviews
@@ -83,16 +83,69 @@ What is this discussion
 
 https://www.wired.com/2015/04/hire-like-google/
 
-wired talk about interviewing
+First five minutes of an interview matter the most
+
+thin slices
+
+early judgements are useless
+
+confirmation bias, move from assessing to finding evidence to support our initial impression
+
+how many golf balls fit inside of a 747
+
+makes the interviewwer feel clever
+
+SVP people operations at Google
+
+Unstructured job interviews are bad at prediccting how someone would perform once hired
+
+reference checks 7%
+work sample 29%
+
+general cognitive ability tests discriminate against non-white, non-male test takers, despite being a strong indicator for work performance
+
+structured interviews are predictive even for unstructured jobs (interesting)
+
+People who score high on conscientiousness "work to completion"
+
+The goal of the interview process is to predict how a candidate will do once they join the team
+
+Do what the science says, behavioral and situational structured interviews with cognitive ability, consientiousness and leadership.
+
+Measure on a consistent rubrik
+
+Don't let only the boss interview
+
+Get a disinterested assessment
+
+
+
 
 https://rework.withgoogle.com/guides/hiring-use-structured-interviewing/steps/avoid-brainteasers/
 
 Google interviewing practices
 
+https://home.ubalt.edu/tmitch/645/session%204/Schmidt%20&%20Oh%20validity%20and%20util%20100%20yrs%20of%20research%20Wk%20PPR%202016.pdf
+
+1998, Frank Schmidt and John Hunter 
+
+Individual performance assements are poor
+
+general mental ability coupled with something else (integrity, structured interview, etc)
+general cogniative ability coupled with a structured interview
+
+This essay is changing drastically
+
+General Cognitive ability seems to be the best predictor by far
+Take home tests seem to do little
+
+Keep in mind this depends how on the job performance is measured
+
+The case against take-home tests
+
+variability in hires matters a lot
 
 # Another drop in the sea of opinions surrounding technical interviews
-
-
 
 Intro about technical interviewing
  - Go into my experience
