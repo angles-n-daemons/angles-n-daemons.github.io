@@ -8,7 +8,10 @@ categories: ["management"]
 Time spent
 8/23 - 45m
 8/24 - 40m
-8/25 - 30m read wired article and study
+8/29 - 30m read wired article and study
+8/30 - 1h15m start talking about take home project
+
+split this into two blogs, against take homes and other approaches
 
 Research:
 Read 5 articles on types of technical interviews
@@ -145,17 +148,69 @@ The case against take-home tests
 
 variability in hires matters a lot
 
-# Another drop in the sea of opinions surrounding technical interviews
+Might be worth discussing take home assignments
 
-Intro about technical interviewing
- - Go into my experience
- - Talk about how I'll use my experience to show some perspective that may be new on certain types of interviews
- - Focus on technical screening, team fit, cultural, motivation etc aren't the topic of focus.
- - Does the person have the technical experience to perform their job function, write code, turn business problems into technical solutions
+Why not take home assignments, references, past work
 
-What makes interviews good? Structured, prepared questions, having a rubric for grading candidates
- - Also omtting the intro where the person talks about their experience
- - Also going to omit how to be a good interviewer, to look for reasons to hire, to make the candidate feel comfortable, to try to understand solutions that diverge from your biases, to encourage a person's best work
+Why programming exercises
+
+# Another dash of salt surrounding technical interviewing
+
+As a software engineer with some experience under my belt, I've seen a lot of interviews from both sides. I've seen the good and the bad from both sides of the line, and after a somewhat uncomfortable recent interview I wanted to flush some of my stronger thoughts out to disk. At first I wanted to bring to light some criticisms on take-home projects, but after exploring my thoughts around this practice I found that there thoughts outside of it which I also wanted to share. With that in mind, I've set out to talk about a variety of practices to screen someone's technical abilities. This doesn't take into account ways to make interivews approachable, or screening for non-technical traits that provide generous value.
+
+# The take-home project
+
+I'll start this treatise with the thought that motivated this post. It's a story of two software engineers, both of whom received a take-home project as part of their interview. Both interview projects specify a 2 hour time limit, and both engineers end up receiving offers. The capabilities of each engineer, and the path they take to complete the challenge project is what is unique to each of their stories. This story seeks to highlight a possible anti-pattern of employing take-home projects.
+
+The first engineer is a 1.5 yoe journeyman software developer. His work is a bit rough, but he's motivated - and has the skills to learn. On receiving the challenge project he immediately gets to work. He loves the company he's working for but he really wants to stand out. The rough time estimate for the project is about 2 hours, and he discards that instruction and says he'll spend as long as he needs to to make it a good application.
+
+
+---- Second engineer
+
+
+The second engineer is a skilled artisan with 8.5 years of experience under his belt. Over the years he's been able to fill in a lot of the gaps in his skills, and he's relatively comfortable building, teaching, and navigating the workspace. He receives the challenge project and sets some time aside to do it. He's struggled with burnout in his career, so he wants to make sure that the project is representative of 2 hours of work - he'd prefer to lose the offer than set unrealistic expectations for himself.
+
+He gets to the project and begins reading it. It's a three page google doc which talks about building an application around a public dataset. It provides little direction, and encourages building whatever the engineer feels comfortable with. In two hours, he's pretty sure he'll only have time to build a front-end so he plans for that. 10 minutes has already passed, so before he decides what he wants to build he needs to read into the dataset.
+
+The dataset itself is fairly simple. He spends some time familiarizing himself with the rows, columns and the variance / cardinality of the data. It's got identity records and statistics associated with each identity. He figures he'll build a search widget, which visualizes a normal distribution for each stat listed as well as highlighting where the selected identify falls along the curve. Another 7-8 minutes has passed
+
+1. Setup a boilerplate react application
+2. Load the dataset from the filesystem in the app
+3. Create a search bar for the identities
+4. Graph the curve of all datapoints for some statistic
+5. Highlight where the selected identity falls along that curve
+6. Repeat for additional statistics in the dataset
+7. Write a README describing the project and quickstart steps
+
+Project setup went well, create-react-app really makes this part of the project a breeze. Dataset loading was less simple. Loading the dataset in the browser would require passing the file up from the filesystem, then parsing the CSV on the front end. The first part you felt alright about, but the latter might require a little more thought. After a couple tries, your fetch call reads the file and is logging it to the console. Preliminary searches on csv parsing on the front end lead you to this library named `papi`, but your project has no external dependencies outside of the ones included in create-react-app and he figures he'll see if he can go without it. He toys with the idea of implementing a simple parser on his own, but knows a lot better than that. He finds a [google library](https://code.google.com/archive/p/csv-to-array/) which modifies the String prototype; one which can be pulled from a CDN, just like the old days. It strikes him as the cleanest approach given the constraints of the project so he links to it in his index.html, and gives it a go.
+
+First efforts are not good. The data isn't being parsed appropriately. He quickly weighs off the cost of debugging it himself. The problem could be the google library, or the dataset. Since google libraries are usually halfway decent, he assumes the dataset. If the public dataset isn't able to parse effectively there's likely no finished project at the end of 2 hours. 45 minutes have passed already and he's written less than 15 lines of significant code.
+
+He attaches a debugger and steps through it, but he's making little headway. He tries a bit more and reweighs his options. Going against his preference, he installs the `papi` package to see if it works better than the google library. It works, and he's got the tabular data in memory. An hour has passed since he started.
+
+He spends a little time reading the react-select documents, they seem fairly simple to setup. He spends some time filtering the dataset to just the identities and then adds a multiselect to the application. It works fine and he can confirm that selecting an identity is firing off an event. Now he's off to the meat of the project.
+
+He's worked with ChartJS before, but just in case he scans the internet to see if there's a more appropriate library for React. There's some stuff, but it seems like [ChartJS has bindings](https://react-chartjs-2.js.org/) for React. He thinks, he spends more time weighing his options having not plotted information in React to his memory. He's built a variety of things in React, but never a plot. He's only done that with Angular.
+
+He thinks on it some more, he's past 1h20m on the project so he decides to go with ChartJS. He installs the react library and compares it to the documentation. The API is different. There's some registration mechanism which he's unfamiliar with. The documentation for the library doesn't seem to explain how it's used, and it seems tangentially related - but not uniform with the ChartJS API. Confused, he decides to reverse engineer an example and go from there. He spends another few minutes deciding the best chart and then selects the Area Chart. He copies the code from the example and fiddles with it a little bit so it renders.
+
+He thinks about rendering the dataset, and realizes he'll have to come up with some bucketing mechanism. He's also still got to highlight where the selected identity falls along the distribution so he gets started with that. He searches the internet for this and finds some promising posts that address this situation. He looks back at what he has and again tries to understand how the React registration maps to the underlying ChartJS library. If he misses a registration, would this specific change not work? What all are the registrations.
+
+A few minutes from 2 hours, he steps away from his computer. He tells the hiring manager he's spent two hours on it but he'd like more time to work on it. The manager says not to worry about it, preferring a not-perfect 2 hour project to one which is worked on longer. At this point the sum of the work he's done has been:
+
+ - Fetching a CSV from the filesystem
+ - Creating a typeahead input from the data
+ - Rendering a single graph, whose data and lables have been hardcoded and copied from the library's repository
+
+He thinks of it as less like a "not-perfect" solution and more like a "just-barely-better-than-handing-in-nothing". He's dedicated to honesty with himself and others in this respect however, so he hands the project in.
+
+He tries to finagle
+
+Rob Pike (a little copying is better than a little dependency)
+
+# programming exercises
+
+Data Structures and Algorithms provide a shared foundation that can be learned in a relatively short period of time. Absent this shared foundation, the overlap of skills between the interviewer and interviewee could be nil, and no signal could be gained.
 
 # The go to screening process
 Process that most organizations include is some number of programming exercises, and a system design portion
