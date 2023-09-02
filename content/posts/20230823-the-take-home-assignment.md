@@ -10,7 +10,7 @@ Time spent
 8/24 - 40m
 8/29 - 30m read wired article and study
 8/30 - 1h15m start talking about take home project
-9/2 - 1h
+9/2 - ?
 
 # The take home exercise, what are its merits?
 
