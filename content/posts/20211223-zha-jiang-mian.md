@@ -22,6 +22,7 @@ ingredients:
    - 1lb ground pork (or turkey)
    - 2 heaping tbsp dou ban jiang (bean paste)
    - 2 heaping tbsp tian mian jiang (sweet bean paste)
+   - 2 tsp shaoxing wine
    - 1/2 tomato (diced)
    - 1 cup greenbeans (diced)
    - 2 cup dry tofu (diced)
@@ -38,7 +39,7 @@ instructions:
 _sauce_
 1. In a skillet over medium heat, fry the scallions and garlic for about 1 minute, until the oil is infused with the flavor.
 2. Remove the scallions and garlic and add the pork. Brown and crumble - you want the pieces to be extra small.
-3. Once the pork is sufficiently browned and crumbled, add in the dou ban jiang and tian mian jiang and cook for 3 more minutes on high heat. You want some of the sauce to be browned as well for more flavor - but stir to ensure it doesn't burn.
+3. Once the pork is sufficiently browned and crumbled, add in the dou ban jiang, tian mian jiang, and shaoxing wine and cook for 3 more minutes on high heat. You want some of the sauce to be browned as well for more flavor - but stir to ensure it doesn't burn.
 4. Add the tomato, green bean, tofu and water and bring the mixture to a simmer. Simmer for 30 minutes.
 
 _serving_
