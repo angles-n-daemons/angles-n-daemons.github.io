@@ -4,17 +4,6 @@ date: 2023-08-23T12:41:00-04:00
 tags: ["interviewing", "management"]
 categories: ["management"]
 ---
-
-Time spent
-8/23 - 45m
-8/24 - 40m
-8/29 - 30m read wired article and study
-8/30 - 1h15m start talking about take home project
-9/2 - 1h
-9/2 - 1h setting up old chat project to take pictures
-9/4 - 1h trying to setup old project
-9/11 - 1h write a little bit more about this
-
 # What motivates the technical take home test?
 
 The take home exercise is an interviewing practice that's existed for a while. It's been around for a while in the form of a case study, and I've seen it personally as an open ended development exercise. If completed well, it provides a great deal of insight into how the candidate works. Like any practice though, it isn't without its drawbacks. Aside from the issues companies face like cheating[1], take home interviews can artificially limit the prospective talent pool, in addition to self-select for dishonest candidates.
@@ -152,3 +141,13 @@ Source repositories:
 
 https://github.com/angles-n-daemons/chat
 https://github.com/angles-n-daemons/baseball-stats
+
+Time spent
+- 8/23 - 45m
+- 8/24 - 40m
+- 8/29 - 30m read wired article and study
+- 8/30 - 1h15m start talking about take home project
+- 9/2 - 1h
+- 9/2 - 1h setting up old chat project to take pictures
+- 9/4 - 1h trying to setup old project
+- 9/11 - 1h write a little bit more about this
