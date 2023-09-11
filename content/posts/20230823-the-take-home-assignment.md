@@ -139,8 +139,8 @@ This selects for people who are willing to go "above and beyond" what they're or
 
 Source repositories:
 
-https://github.com/angles-n-daemons/chat
-https://github.com/angles-n-daemons/baseball-stats
+ - [ASAPP Take Home](https://github.com/angles-n-daemons/chat)
+ - [Mets Take Home](https://github.com/angles-n-daemons/baseball-stats)
 
 Time spent
 - 8/23 - 45m
