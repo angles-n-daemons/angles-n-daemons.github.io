@@ -1,5 +1,5 @@
 ---
-title: "musings on the take home technical assignment"
+title: "musings on the take home technical interview"
 date: 2023-08-23T12:41:00-04:00
 tags: ["interviewing", "management"]
 categories: ["management"]
@@ -13,10 +13,11 @@ Time spent
 9/2 - 1h
 9/2 - 1h setting up old chat project to take pictures
 9/4 - 1h trying to setup old project
+9/11 - 20m write a little bit more about this
 
-# The take home exercise, what are its merits?
+# What motivates the technical take home test?
 
-The take home exercise is an interviewing practice that's existed for a while. It's been around for a while in the form of a case study, and I've seen it personally as a short* development exercise. If completed well, it provides a great deal of insight into how the candidate works. Like any practice though, it isn't without its drawbacks. Aside from the issues companies face like cheating[1], take home interviews can artificially limit the prospective talent pool, in addition to self-select for somewhat dishonest candidates.
+The take home exercise is an interviewing practice that's existed for a while. It's been around for a while in the form of a case study, and I've seen it personally as an open ended development exercise. If completed well, it provides a great deal of insight into how the candidate works. Like any practice though, it isn't without its drawbacks. Aside from the issues companies face like cheating[1], take home interviews can artificially limit the prospective talent pool, in addition to self-select for dishonest candidates.
 
 This treatise includes the story of two separate software engineers, both who are given a challenge project to complete as a part of their interview. Both challenge projects specify a 2 hour limit, and both engineers eventually receive offers. The only difference is in how they approach the project. Hopefully in reading their stories you can see or strengthen a perspective I have on take home interview assignments.
 
@@ -134,14 +135,13 @@ The total of this effort is 81 lines of code outside of what create-react-app ad
 
 # Who do take-home assignments select for?
 
-If it isn't obvious at this point, both engineers are me. The junior was me interviewing for ASAPP, the senior was me interviewing for The Mets.
+If it isn't obvious at this point, both engineers are me. The junior engineer interviewed for ASAPP, the senior for The Mets.
 
-Talk about the difference between the projects. Junior's is more extensive, more feature rich, cleaner, uses better practices, has more documentation etc. Talk about how the junior and senior engineer show up on the job.
+Now if I were to receive either of these projects, I likely wouldn't know much about the engineer than what they created. The first project was extensive, clean, creative and beyond what I would expect candidates to hand in. The second project is incomplete, sloppy, and confusing - the result of a person cut short in the middle of building something many times smaller. If I were to judge the two, the first project is far better than the latter.
 
-On a fair playing field, I'm more experienced and skilled now than I was at 1.5 years. A take-home project isn't a level playing field though. I'm not going to work 30 hours for a take home project, even though I see myself as multiple times more productive than I was then.
+On a level playing field, I'm more experienced and skilled now than I was at 1.5 years. A take-home project isn't a level playing field though. I'm not going to work 30 hours for a take home project, even though I see myself as many times more productive than I was then.
 
-Herein lies the crux of the issue. While I feel much more productive working 40 hours a week than my younger 60, perhaps 70 hour a week counterpart, our projects tell quite a different story.
-
+Herein lies the crux of the issue. While I feel more productive during 40 weekly hours than my younger 60, perhaps 70 hours a week counterpart, our projects tell quite a different story.
 
 This selects for people who are willing to go "above and beyond" what they're ordinarily capable of.
 
