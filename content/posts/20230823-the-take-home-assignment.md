@@ -138,7 +138,7 @@ If it isn't obvious at this point, both engineers are me. The junior engineer in
 
 Now if I review either of these projects, I likely wouldn't know much about the engineer than what they created. I wouldn't know how much time they spend on it or whether the framework of the question was familiar to them. I'd only know what I saw in front of me.
 
-The first project was extensive, clean, creative and beyond what I would expect candidates to hand in. The second project is incomplete, sloppy, and confusing - the result of a person cut short in the middle of building something many times smaller. If I were to judge the two, the first project is far better than the latter.
+The first project was extensive, clean, creative and beyond what I would expect candidates to hand in. The second project is incomplete, sloppy, and confusing - the result of a person cut short in the middle of building something many times smaller. The first contains nearly 1200 lines of significant code, the latter 81. If I were to judge the two, the first project is far better than the latter.
 
 On a level playing field, I'm more experienced and skilled now than I was at 1.5 years. A take-home project isn't a level playing field though. I'm not going to work 30 hours for a take home project, even though I see myself as many times more productive than I was then.
 
