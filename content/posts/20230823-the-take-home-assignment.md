@@ -8,13 +8,13 @@ categories: ["management"]
 
 The take home exercise is an interviewing practice that's existed for a while. It's been around for a while in the form of a case study, and I've seen it personally as an open ended development exercise. If completed well, it provides a great deal of insight into how the candidate works. Like any practice though, it isn't without its drawbacks. Aside from the issues companies face like cheating[1], take home interviews can artificially limit the prospective talent pool, in addition to self-select for dishonest candidates.
 
-This blog includes the story of two separate software engineers, both given a challenge project to complete as a part of their interview. Both challenge projects specify a 2 hour time limit, and both engineers complete their projects and eventually receive offers. The only difference is in how they approach the project. Hopefully in reading their stories you can see or strengthen a perspective I have on take home interview assignments.
+This blog tells the story of two separate software engineers, both given a challenge project to complete as a part of their interview. Both challenge projects specify a 2 hour time limit, and both engineers eventually receive offers. The only difference between the two stories is in how the engineers approach the project. By hearing these stories, I hope you come to see or strengthen a perspective I've had on this interview process for some time.
 
 # The junior's approach
 
-The first engineer is a 1.5 yoe journeyman software developer. His work is a bit rough, but he's motivated and has the skills to learn. He's reached out to by a recruiter about an opportunity with an AI-focused startup and he's intrigued by the opportunity. He shares this interest and is asked to complete a challenge project for the company. His task is to build a chat application which demonstrates his skills as a full-stack developer.
+Our first engineer is a 1.5 yoe journeyman software developer. His work is a bit rough, a bit shakey, but he's quite motivated and has the skills to learn. He's reached out to by a recruiter about an opportunity with an AI-focused startup and he's intrigued by the opportunity. He shares this interest and is asked to complete a challenge project for the company. The task is to build a chat application which demonstrates his skills as a full-stack developer.
 
-On receiving the challenge project he immediately gets to work. He likes the company a lot and wants to stand out. The first day he starts with the backend and builds out the service and the configuration scheme. The configuration system itself is backed by sqlite and he writes a script to setup the configuration for the service. The next day he moves onto the login form and route development, employing a pbkdf2 password security scheme which should demonstrate his basic understanding of secure practices. He continues to build, adding to the back end and front end incrementally. He feels no pressure imposed by the artificial 2 hour limit, he only feels motivation to really deliver a knock out project for the team. He gets stuck many times along the way, sometimes for hours at a time - but in lieu of a real deadline he just works through these issues as they come up.
+On receiving the challenge project he immediately gets to work. He likes the company a lot and wants to stand out. In the first day he starts with the backend and builds out the service and the configuration scheme. The configuration system itself is backed by sqlite and he writes a script to setup the configuration for the service. 
 
 ```
 Select an option...
@@ -27,12 +27,14 @@ x: Exit program
 ```
 _The project included a setup script which took all the user entered configuration values and wrote them to a sqlite database_
 
-Another day passes and he's finalized his DDL specification for his MySQL store. Yet another one goes by and he's added functionality for joining and leaving rooms in irc like functionality. He writes tests, stylesheets, http and websocket handlers, another angular directive.
+The next day he moves onto the login form and route development, employing a pbkdf2 password security scheme which should demonstrate his basic understanding of secure practices. He slowly continues to build, adding to the back end and front end incrementally. There is no pressure imposed by the artificial 2 hour time limit, he only feels motivation to deliver a knock out project for the team. There are hiccups along the way, sometimes he gets stuck for hours at a time - but in lieu of a real deadline he just churns through these issues as they come up.
+
+Another day passes and the DDL is complete for his MySQL store. Yet another one goes by and there's functionality for joining and leaving rooms in IRC like functionality. He writes tests, stylesheets, http and websocket handlers, another angular directive.
 
 ![Dillsapp](/img/dillsapp.png)
 _The finished product was a fairly robust slack-like websocket application._
 
-When he's preparing to zip up and submit the project, it's been more than two weeks. More than 1200 lines of code have been hand-tailored to fit the project's specification and he feels confident that his project will carry him far.
+When he's preparing to zip up and submit the project, it's been more than two weeks. More than 1200 lines of code have been hand-tailored to fit the project's specification and he feels confident that this project will stand apart from the competition.
 
 This project is far from runnable. It's got a few bugs in the setup process and doesn't work perfectly. But if one is able to run it, it's a fairly impressive piece of work.
 
@@ -68,7 +70,7 @@ Project setup goes well, create-react-app really makes this part of the project 
 > A little copying is better than a little dependency.
 > - The Go Proverbs
 
-His first efforts are not good. The data isn't being parsed appropriately. He quickly weighs off the cost of debugging it himself. The problem could be the Google library, or the dataset. Since Google libraries tend to be halfway decent, he assumes the dataset. If the public dataset isn't able to parse effectively there's likely no finished project at the end of 2 hours. 45 minutes have passed already and he's written less than 15 lines of significant code.
+First efforts are not good. The data isn't being parsed appropriately. He quickly weighs off the cost of debugging it himself. The problem could be the Google library, or the dataset. Since Google libraries tend to be halfway decent, he assumes the dataset. If the public dataset isn't able to parse effectively there's likely no finished project at the end of 2 hours. 45 minutes have passed already and he's written less than 15 lines of significant code.
 
 He attaches a debugger and steps through it, but he's making little headway. He tries a bit more and reweighs his options. Going against his initial preference, he installs the `papi` package to see if it works better than the google library. It works, and he's got the tabular data in memory. An hour has passed since he started.
 
@@ -123,9 +125,9 @@ The total of this effort is 81 lines of code outside of what create-react-app ad
 
 # Who do take-home assignments select for?
 
-If it isn't obvious at this point, both engineers are me. The junior engineer interviewed for ASAPP, the senior one for The Mets.
+At this point of this discourse it might help to point out both engineers in this story are me. The first was when I interviewed for ASAPP, the second was when I interviewed for the Mets.
 
-Now if I review either of these projects, I likely wouldn't know much about the engineer than what they created. I wouldn't know how much time they spend on it or whether the framework of the question was familiar to them. I'd only know what I saw in front of me.
+Now if I were asked to review either of these projects, I likely wouldn't know much about the engineer than what they created. I wouldn't know how much time they spend on it or whether the framework of the question was familiar to them. I'd only know what I saw in front of me.
 
 The first project was extensive, clean, creative and beyond what I would expect candidates to hand in. The second project is incomplete, sloppy, and confusing - the result of a person cut short in the middle of building something many times smaller. The first contains nearly 1200 lines of significant code, the latter 81. If I were to judge the two, the first project is far better than the latter.
 
