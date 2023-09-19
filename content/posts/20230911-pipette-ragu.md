@@ -1,17 +1,16 @@
 ---
-title: "Pipette Ragu, my Italian dream"
-date: 2021-12-23T23:17:32-04:00
+title: "Pipette Ragu, my italian dream"
+date: 2023-09-11T16:03:00-04:00
 tags: ["italian", "pasta"]
 categories: ["cooking", "recipes"]
 ---
 
-<Picture of Pipette Ragu>
 ![Pipette Ragu, the Forma Pasta Factory classic](/img/pipette-ragu.png)
-**Figure 1. This dish has brought me more joy than I can easily recount.
+**Figure 1. This dish has brought me more joy than I can easily recount.**
 
-Italian food has always held a small warm space in my heart. Something about the flavors, the textures, the apparent brightness in the food has been easy to fall back on for most of my life.
+Italian food has always held a small warm space in my heart. Something about the flavors, the textures, the apparent brightness in the food has been easy to fall into for most of my life.
 
-Like lots of college students, pasta and sauce was a staple throughout my younger years and it took quite a bit to feel comfortable making my own sauce. Like all people though, we change and part of that magnificent journey for me has been a more thorough approach to my home cooking.
+Like lots of college students, pasta and sauce was a staple throughout my younger years and it took quite a while to feel comfortable making my own sauce. Like all people though, we change and part of that path for me has been a more thorough approach to my home cooking.
 
 This dish in particular has been a touchstone from which I draw joy for the better part of my time in the city after COVID. Something about the price, the speed, and just how delicious it is makes it such a simple choice when that toubling question of what to eat comes around.
 
@@ -55,6 +54,8 @@ Serving instructions (per 3 oz dried pasta):
 2. Add 1/4 cup of sauce to the mix. Stir the sauce, pasta and pasta water together on medium heat for 2-3 minutes or until the sauce thickens.
 3. Garnish with parmesean cheese, chopped parsley and black pepper.
 ```
+
+Something to note. The ragu sauce can be frozen and should have a whipped cream-like texture when refridgerated.
 
 Time spent:
  - 20m initial drop
